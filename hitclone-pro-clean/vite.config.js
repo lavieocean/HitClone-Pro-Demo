@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   root: './',
   publicDir: 'public',
-  base: '/',
+  base: process.env.NODE_ENV === 'production' ? '/HitClone-Pro-Demo/' : '/',
   server: {
     host: 'localhost',
     port: 3000,

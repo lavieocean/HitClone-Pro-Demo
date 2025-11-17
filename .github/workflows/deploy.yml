@@ -37,6 +37,7 @@ jobs:
       - name: Build
         working-directory: hitclone-pro-clean
         env:
+          NODE_ENV: production
           VITE_SCRAPINGDOG_API_KEY: ${{ secrets.VITE_SCRAPINGDOG_API_KEY }}
         run: npm run build
 

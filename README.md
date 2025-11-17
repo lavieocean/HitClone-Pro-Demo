@@ -5,11 +5,20 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.3-38bdf8)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## 🌐 在线体验
+## 🌐 在线演示
 
 **立即体验**: [https://lavieocean.github.io/HitClone-Pro-Demo/](https://lavieocean.github.io/HitClone-Pro-Demo/)
 
-> 📝 注意：在线版本需要配置 API Key 才能使用完整功能。请参考下方的 [API 配置说明](#-api-配置)。
+> 🎉 **无需配置，开箱即用！** 演示版本使用预设的视频数据，您可以直接体验所有分析功能和报告效果，无需任何 API Key。
+>
+> **演示功能**：
+> - ✅ 完整的视频分析报告查看
+> - ✅ 10维度频道深度分析
+> - ✅ 交互式数据可视化
+> - ✅ 历史数据管理
+> - ✅ 所有UI和交互功能
+>
+> **注意**：演示版本使用模拟数据，如需分析真实视频，请参考下方的 [本地开发配置](#-快速开始)。
 
 ---
 
