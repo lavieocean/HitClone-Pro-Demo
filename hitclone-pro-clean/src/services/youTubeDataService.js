@@ -18,7 +18,7 @@ class YouTubeDataService {
     this.cacheTimeout = 5 * 60 * 1000 // 5分钟缓存
     
     // Scrapingdog API配置
-    this.scrapingdogApiKey = '68660c4306b4f8aafe2d25dd' // 免费测试API Key
+    this.scrapingdogApiKey = import.meta.env.VITE_SCRAPINGDOG_API_KEY || ''
     this.scrapingdogBaseUrl = 'https://api.scrapingdog.com/youtube/transcripts'
     
     // API调用历史记录

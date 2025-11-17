@@ -5,6 +5,14 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.3-38bdf8)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+## 🌐 在线体验
+
+**立即体验**: [https://lavieocean.github.io/HitClone-Pro-Demo/](https://lavieocean.github.io/HitClone-Pro-Demo/)
+
+> 📝 注意：在线版本需要配置 API Key 才能使用完整功能。请参考下方的 [API 配置说明](#-api-配置)。
+
+---
+
 ## 📌 项目概要
 
 HitClone Pro 是一个专为 **Claude Artifacts** 环境设计的 AI 驱动视频分析工具，支持 YouTube 和 Bilibili 视频的深度分析。通过 Claude AI 和 Gemini AI 的强大能力，提供内容理解、情感分析、参与度评估和频道洞察等功能。
@@ -239,18 +247,49 @@ npm run test:server   # 🖥️ 服务器健康检查
 
 ---
 
-## 📝 API 配置
+## 🔑 API 配置
 
-### ScrapingDog API (已配置)
-- YouTube 字幕抓取
-- 视频元数据获取
-- API Key: `68660c4306b4f8aafe2d25dd`
+### 本地开发配置
 
-### Gemini API (用户配置)
-1. 进入应用 → API Settings
-2. 选择 Google Gemini 提供商
-3. 输入您的 Gemini API Key
-4. 测试连接
+1. **复制环境变量模板**
+   ```bash
+   cd hitclone-pro-clean
+   cp .env.example .env
+   ```
+
+2. **配置 ScrapingDog API Key**
+
+   在 `.env` 文件中设置：
+   ```env
+   VITE_SCRAPINGDOG_API_KEY=your_api_key_here
+   ```
+
+   获取免费 API Key: [ScrapingDog](https://www.scrapingdog.com/)
+
+3. **配置 Gemini API Key（可选）**
+
+   在 `.env` 文件中设置：
+   ```env
+   VITE_GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+
+   获取 API Key: [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+### 在线部署配置
+
+如果您 fork 了本项目并希望部署到 GitHub Pages：
+
+1. **设置 GitHub Secrets**
+   - 进入仓库 Settings → Secrets and variables → Actions
+   - 添加 Secret: `VITE_SCRAPINGDOG_API_KEY`
+   - 值为您的 ScrapingDog API Key
+
+2. **启用 GitHub Pages**
+   - Settings → Pages
+   - Source 选择 "GitHub Actions"
+
+3. **推送代码自动部署**
+   - 推送到 main 或 master 分支会自动触发部署
 
 ---
 

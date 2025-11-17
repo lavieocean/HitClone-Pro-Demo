@@ -87,7 +87,7 @@ npm run start
 - ✅ **详细错误日志**: 精确定位问题位置
 
 ### **API状态**
-- ✅ **ScrapingDog API**: 正常工作 (68660c4306b4f8aafe2d25dd)
+- ✅ **ScrapingDog API**: 需要在 `.env` 文件中配置
 - ⚙️ **Gemini API**: 待用户在设置页面配置
 
 ### **Smart Channel Analysis功能**

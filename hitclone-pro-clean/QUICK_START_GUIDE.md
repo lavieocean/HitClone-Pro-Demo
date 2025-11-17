@@ -58,9 +58,9 @@ npm run start
 ## 🔑 **API配置说明**
 
 ### **✅ ScrapingDog API**
-- **状态**: 已配置且正常工作
+- **状态**: 需要配置 API Key
 - **功能**: YouTube字幕和数据抓取
-- **测试结果**: ✅ 正常 (`68660c4306b4f8aafe2d25dd`)
+- **配置方法**: 在 `.env` 文件中设置 `VITE_SCRAPINGDOG_API_KEY`
 
 ### **⚙️ Gemini API** 
 - **状态**: 需要用户配置API Key
