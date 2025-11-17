@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   root: './',
   publicDir: 'public',
+  base: '/',
   server: {
     host: 'localhost',
     port: 3000,
@@ -16,6 +17,7 @@ export default defineConfig({
     }
   },
   build: {
+    outDir: 'dist',
     rollupOptions: {
       input: 'index.html', // Only build the main index.html
       output: {
