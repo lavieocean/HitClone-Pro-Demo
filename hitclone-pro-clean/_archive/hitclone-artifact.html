@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HitClone Pro - SRT分析工具</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+
+        // SRT解析器
+        class SRTParser {
+            static parseSRT(content) {
+                const blocks = content.trim().split(/\n\s*\n/);
+                const subtitles = [];
+
+                for (const block of blocks) {
+                    const lines = block.trim().split('\n');
+                    if (lines.length < 3) continue;
+
+                    const index = parseInt(lines[0]);
+                    const timeMatch = lines[1].match(/(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/);
+                    
+                    if (!timeMatch) continue;
+
+                    const startTime = this.timeToSeconds(timeMatch[1]);
+                    const endTime = this.timeToSeconds(timeMatch[2]);
+                    const text = lines.slice(2).join(' ').replace(/<[^>]*>/g, '');
+
+                    subtitles.push({
+                        index,
+                        startTime,
+                        endTime,
+                        duration: endTime - startTime,
+                        text: text.trim()
+                    });
+                }
+
+                return subtitles;
+            }
+
+            static timeToSeconds(timeString) {
+                const [time, ms] = timeString.split(',');
+                const [hours, minutes, seconds] = time.split(':').map(Number);
+                return hours * 3600 + minutes * 60 + seconds + parseInt(ms) / 1000;
+            }
+
+            static getAnalysisData(subtitles) {
+                if (!subtitles || subtitles.length === 0) {
+                    return {
+                        totalSubtitles: 0,
+                        totalDuration: 0,
+                        totalWords: 0,
+                        avgWordsPerMinute: 0
+                    };
+                }
+
+                const endTimes = subtitles.map(s => s.endTime).filter(t => !isNaN(t) && t > 0);
+                const totalDuration = endTimes.length > 0 ? Math.max(...endTimes) : 0;
+                const totalWords = subtitles.reduce((sum, s) => sum + (s.text ? s.text.split(/\s+/).length : 0), 0);
+                const avgWordsPerMinute = totalDuration > 0 ? Math.round((totalWords / (totalDuration / 60)) * 10) / 10 : 0;
+
+                return {
+                    totalSubtitles: subtitles.length,
+                    totalDuration: totalDuration,
+                    totalWords: totalWords,
+                    avgWordsPerMinute: avgWordsPerMinute
+                };
+            }
+        }
+
+        // 主应用组件
+        const App = () => {
+            const [srtFile, setSrtFile] = useState(null);
+            const [srtContent, setSrtContent] = useState(null);
+            const [analysisResults, setAnalysisResults] = useState(null);
+            const [isAnalyzing, setIsAnalyzing] = useState(false);
+            const [error, setError] = useState('');
+            const [dragOver, setDragOver] = useState(false);
+            const fileInputRef = useRef(null);
+
+            // 检测Claude API
+            const hasClaudeAPI = typeof window !== 'undefined' && window.claude && window.claude.complete;
+
+            useEffect(() => {
+                console.log('🔍 Claude API检测:', hasClaudeAPI ? '✅ 可用' : '❌ 不可用');
+            }, [hasClaudeAPI]);
+
+            const handleFileSelect = (file) => {
+                if (!file || !file.name.toLowerCase().endsWith('.srt')) {
+                    setError('请选择SRT格式的字幕文件');
+                    return;
+                }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    setError('文件大小不能超过5MB');
+                    return;
+                }
+
+                setSrtFile(file);
+                setError('');
+                setAnalysisResults(null);
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const content = e.target.result;
+                        const subtitles = SRTParser.parseSRT(content);
+                        
+                        if (subtitles.length === 0) {
+                            setError('SRT文件格式错误或为空');
+                            return;
+                        }
+
+                        const analysisData = SRTParser.getAnalysisData(subtitles);
+                        setSrtContent({ 
+                            subtitles, 
+                            analysisData,
+                            rawContent: content
+                        });
+                    } catch (err) {
+                        setError('SRT文件解析失败：' + err.message);
+                    }
+                };
+                reader.readAsText(file, 'utf-8');
+            };
+
+            const handleAnalyze = async () => {
+                if (!srtContent) {
+                    setError('请先上传SRT字幕文件');
+                    return;
+                }
+
+                setIsAnalyzing(true);
+                setError('');
+
+                try {
+                    const { subtitles, analysisData } = srtContent;
+                    const sampleSubtitles = subtitles.slice(0, 20);
+                    const sampleText = sampleSubtitles.map(s => s.text).join(' ');
+                    
+                    const prompt = `分析以下SRT字幕文件内容：
+
+文件基本信息：
+- 字幕条数：${analysisData.totalSubtitles}
+- 总时长：${Math.round(analysisData.totalDuration / 60 * 10) / 10}分钟
+- 总词数：${analysisData.totalWords}
+- 平均语速：${analysisData.avgWordsPerMinute}词/分钟
+
+前20条字幕文本：
+${sampleText}
+
+请提供以下维度的专业分析：
+1. 内容主题识别（主要讨论的话题）
+2. 语言风格评估（正式/非正式、专业/通俗等）
+3. 情感倾向分析（积极/中性/消极的比例）
+4. 目标受众画像（年龄、兴趣、教育水平等）
+5. 内容质量评分（1-10分）
+6. 关键词提取（最重要的5-10个关键词）
+7. 内容优化建议（如何提升内容质量）
+
+请以JSON格式返回分析结果。`;
+
+                    console.log('🚀 开始调用Claude API...');
+                    
+                    if (hasClaudeAPI) {
+                        try {
+                            const response = await window.claude.complete({
+                                prompt: prompt,
+                                max_tokens: 2000,
+                                temperature: 0.7
+                            });
+                            
+                            const result = response.completion || response;
+                            console.log('✅ Claude API响应成功');
+                            
+                            try {
+                                const parsedResult = JSON.parse(result);
+                                setAnalysisResults({
+                                    ...parsedResult,
+                                    metadata: {
+                                        filename: srtFile.name,
+                                        analyzedAt: new Date().toISOString(),
+                                        apiUsed: 'Claude API'
+                                    }
+                                });
+                            } catch (parseError) {
+                                setAnalysisResults({
+                                    rawResponse: result,
+                                    metadata: {
+                                        filename: srtFile.name,
+                                        analyzedAt: new Date().toISOString(),
+                                        apiUsed: 'Claude API',
+                                        note: '响应不是有效的JSON格式'
+                                    }
+                                });
+                            }
+                        } catch (apiError) {
+                            console.error('❌ Claude API调用失败:', apiError);
+                            throw new Error('Claude API调用失败: ' + apiError.message);
+                        }
+                    } else {
+                        // 模拟响应（仅供测试）
+                        console.log('⚠️ 使用模拟响应（Claude API不可用）');
+                        setAnalysisResults({
+                            主题识别: "这是一个技术教程视频，主要讲解编程相关内容",
+                            语言风格: "专业但通俗易懂，适合初学者",
+                            情感倾向: { 积极: 70, 中性: 25, 消极: 5 },
+                            目标受众: "18-35岁的技术学习者",
+                            内容质量评分: 8.5,
+                            关键词: ["编程", "技术", "教程", "学习", "开发"],
+                            优化建议: ["增加更多实例", "提供练习题", "优化语速"],
+                            metadata: {
+                                filename: srtFile.name,
+                                analyzedAt: new Date().toISOString(),
+                                apiUsed: '模拟数据'
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error('分析失败:', err);
+                    setError('分析失败: ' + err.message);
+                } finally {
+                    setIsAnalyzing(false);
+                }
+            };
+
+            const handleDrop = (e) => {
+                e.preventDefault();
+                setDragOver(false);
+                const files = Array.from(e.dataTransfer.files);
+                if (files.length > 0) {
+                    handleFileSelect(files[0]);
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
+                    {/* API状态指示器 */}
+                    <div className="fixed top-4 right-4 z-50">
+                        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            hasClaudeAPI 
+                                ? 'bg-green-500 text-white' 
+                                : 'bg-orange-500 text-white'
+                        }`}>
+                            {hasClaudeAPI ? '✅ Claude API可用' : '⚠️ 模拟模式'}
+                        </div>
+                    </div>
+
+                    <div className="max-w-4xl mx-auto">
+                        <div className="text-center mb-8">
+                            <h1 className="text-4xl font-bold mb-2">
+                                HitClone Pro - SRT分析
+                            </h1>
+                            <p className="text-gray-400">
+                                AI驱动的字幕内容分析工具
+                            </p>
+                        </div>
+
+                        {!analysisResults ? (
+                            <div className="bg-gray-800 rounded-lg p-6">
+                                <div
+                                    className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
+                                        dragOver 
+                                            ? 'border-blue-500 bg-blue-500/10' 
+                                            : 'border-gray-600 hover:border-gray-500'
+                                    }`}
+                                    onDrop={handleDrop}
+                                    onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                                    onDragLeave={() => setDragOver(false)}
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    <div className="mb-4 text-5xl">📄</div>
+                                    <h3 className="text-lg font-medium mb-2">
+                                        {srtFile ? srtFile.name : '上传SRT字幕文件'}
+                                    </h3>
+                                    <p className="text-gray-400 text-sm">
+                                        拖拽或点击选择文件（最大5MB）
+                                    </p>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept=".srt"
+                                        onChange={(e) => handleFileSelect(e.target.files[0])}
+                                        className="hidden"
+                                    />
+                                </div>
+
+                                {srtContent && (
+                                    <div className="mt-6 p-4 bg-gray-700 rounded-lg">
+                                        <h4 className="font-medium mb-3">文件信息</h4>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                            <div>
+                                                <div className="text-2xl font-bold text-blue-400">
+                                                    {srtContent.analysisData.totalSubtitles}
+                                                </div>
+                                                <div className="text-gray-400">字幕条数</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-2xl font-bold text-green-400">
+                                                    {Math.round(srtContent.analysisData.totalDuration / 60 * 10) / 10}
+                                                </div>
+                                                <div className="text-gray-400">分钟</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-2xl font-bold text-yellow-400">
+                                                    {srtContent.analysisData.totalWords}
+                                                </div>
+                                                <div className="text-gray-400">总词数</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-2xl font-bold text-purple-400">
+                                                    {srtContent.analysisData.avgWordsPerMinute}
+                                                </div>
+                                                <div className="text-gray-400">词/分钟</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {error && (
+                                    <div className="mt-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-400 text-sm">
+                                        {error}
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={handleAnalyze}
+                                    disabled={isAnalyzing || !srtContent}
+                                    className="mt-6 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-lg transition-colors"
+                                >
+                                    {isAnalyzing ? '分析中...' : '开始AI分析'}
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="bg-gray-800 rounded-lg p-6">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-bold">分析结果</h2>
+                                    <button
+                                        onClick={() => {
+                                            setAnalysisResults(null);
+                                            setSrtContent(null);
+                                            setSrtFile(null);
+                                        }}
+                                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                                    >
+                                        重新分析
+                                    </button>
+                                </div>
+                                
+                                <div className="bg-gray-900 rounded-lg p-4 overflow-auto">
+                                    <pre className="text-sm whitespace-pre-wrap">
+                                        {JSON.stringify(analysisResults, null, 2)}
+                                    </pre>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // 渲染应用
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Channel Analysis Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            transform: scale(1.05);
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Smart Channel Analysis Test</h1>
+        
+        <div class="status info">
+            <strong>测试说明：</strong>这个页面模拟Smart Channel Analysis功能的测试环境
+        </div>
+
+        <h2>📊 模拟历史数据</h2>
+        <div id="mock-data">
+            <p>正在生成模拟频道数据...</p>
+        </div>
+
+        <h2>🧠 Smart Channel Analysis 按钮测试</h2>
+        <div id="channel-list"></div>
+
+        <h2>📡 事件监听器测试</h2>
+        <div id="event-log">
+            <p>等待Smart Channel Analysis事件...</p>
+        </div>
+
+        <h2>🔧 手动触发测试</h2>
+        <button class="button" onclick="manualTest()">手动触发Smart Channel Analysis</button>
+        <button class="button" onclick="clearLog()">清空日志</button>
+    </div>
+
+    <script>
+        // 模拟历史数据
+        const mockHistoryData = [
+            {
+                id: 'video1',
+                title: 'AI技术发展趋势2024',
+                channel: 'TechChannel',
+                score: 85,
+                analysisDate: '2024-07-01',
+                analysisResults: {
+                    contentInfo: { url: 'https://youtube.com/watch?v=1' }
+                }
+            },
+            {
+                id: 'video2', 
+                title: 'Machine Learning入门指南',
+                channel: 'TechChannel',
+                score: 92,
+                analysisDate: '2024-07-02',
+                analysisResults: {
+                    contentInfo: { url: 'https://youtube.com/watch?v=2' }
+                }
+            },
+            {
+                id: 'video3',
+                title: '深度学习实战项目',
+                channel: 'TechChannel', 
+                score: 88,
+                analysisDate: '2024-07-03',
+                analysisResults: {
+                    contentInfo: { url: 'https://youtube.com/watch?v=3' }
+                }
+            },
+            {
+                id: 'video4',
+                title: 'Python编程技巧',
+                channel: 'CodeMaster',
+                score: 79,
+                analysisDate: '2024-07-01',
+                analysisResults: {
+                    contentInfo: { url: 'https://youtube.com/watch?v=4' }
+                }
+            },
+            {
+                id: 'video5',
+                title: 'Web开发最佳实践',
+                channel: 'CodeMaster',
+                score: 83,
+                analysisDate: '2024-07-02',
+                analysisResults: {
+                    contentInfo: { url: 'https://youtube.com/watch?v=5' }
+                }
+            }
+        ];
+
+        // 频道聚合函数
+        function getChannelAggregation() {
+            const channelMap = new Map();
+            mockHistoryData.forEach(report => {
+                const channel = report.channel;
+                if (!channelMap.has(channel)) {
+                    channelMap.set(channel, {
+                        channel,
+                        count: 0,
+                        reports: [],
+                        avgScore: 0
+                    });
+                }
+                const channelData = channelMap.get(channel);
+                channelData.count++;
+                channelData.reports.push(report);
+            });
+            
+            // 计算平均分
+            channelMap.forEach((data, channel) => {
+                const totalScore = data.reports.reduce((sum, report) => sum + report.score, 0);
+                data.avgScore = Math.round(totalScore / data.count);
+            });
+            
+            return Array.from(channelMap.values()).sort((a, b) => b.count - a.count);
+        }
+
+        // Smart Channel Analysis 函数
+        function startSmartChannelAnalysis(channelData) {
+            log(`🚀 启动智能频道分析: ${channelData.channel}`, 'info');
+            
+            const channelVideos = channelData.reports.map(report => ({
+                id: report.id,
+                title: report.title,
+                url: report.analysisResults?.contentInfo?.url || '#',
+                analysisResults: report.analysisResults,
+                analysisDate: report.analysisDate,
+                score: report.score
+            }));
+
+            log(`📹 准备的视频数据: ${channelVideos.length} 个视频`, 'info');
+
+            // 模拟页面跳转
+            log('✅ 模拟跳转到 HitClone Channel...', 'success');
+            
+            // 触发自定义事件
+            setTimeout(() => {
+                const channelAnalysisData = {
+                    channelName: channelData.channel,
+                    channelId: `smart_${channelData.channel}`,
+                    totalVideos: channelData.count,
+                    videos: channelVideos,
+                    source: 'smart_history_analysis',
+                    canAnalyze: true
+                };
+                
+                log('📡 发送智能频道分析事件', 'info');
+                window.dispatchEvent(new CustomEvent('smartChannelAnalysis', { 
+                    detail: channelAnalysisData 
+                }));
+                log('✅ 智能频道分析事件已发送', 'success');
+            }, 100);
+        }
+
+        // 事件监听器
+        window.addEventListener('smartChannelAnalysis', (event) => {
+            log('🎉 收到智能频道分析事件!', 'success');
+            log(`频道名称: ${event.detail.channelName}`, 'info');
+            log(`视频数量: ${event.detail.totalVideos}`, 'info');
+            log(`数据来源: ${event.detail.source}`, 'info');
+            log('完整数据:', 'info');
+            log(JSON.stringify(event.detail, null, 2), 'info');
+        });
+
+        // 日志函数
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('event-log');
+            const logEntry = document.createElement('div');
+            logEntry.className = `status ${type}`;
+            logEntry.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // 清空日志
+        function clearLog() {
+            document.getElementById('event-log').innerHTML = '<p>等待Smart Channel Analysis事件...</p>';
+        }
+
+        // 手动测试
+        function manualTest() {
+            const channelAggregation = getChannelAggregation();
+            const techChannel = channelAggregation.find(c => c.channel === 'TechChannel');
+            if (techChannel) {
+                startSmartChannelAnalysis(techChannel);
+            }
+        }
+
+        // 页面加载时初始化
+        window.onload = function() {
+            const channelAggregation = getChannelAggregation();
+            
+            // 显示模拟数据
+            document.getElementById('mock-data').innerHTML = `
+                <pre>${JSON.stringify(channelAggregation, null, 2)}</pre>
+            `;
+
+            // 生成频道列表和按钮
+            const channelListDiv = document.getElementById('channel-list');
+            channelListDiv.innerHTML = channelAggregation.map(channel => `
+                <div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px;">
+                    <h3>${channel.channel} (${channel.count} 个视频)</h3>
+                    <p>平均分: ${channel.avgScore}</p>
+                    ${channel.count >= 3 ? `
+                        <button class="button" onclick="startSmartChannelAnalysis(${JSON.stringify(channel).replace(/"/g, '&quot;')})">
+                            🧠 Smart Channel Analysis
+                        </button>
+                    ` : '<p style="color: #999;">需要3个或以上视频才能显示Smart Channel Analysis按钮</p>'}
+                </div>
+            `).join('');
+
+            log('🚀 Smart Channel Analysis测试页面已加载', 'success');
+            log(`发现 ${channelAggregation.length} 个频道`, 'info');
+            log(`其中 ${channelAggregation.filter(c => c.count >= 3).length} 个符合Smart Channel Analysis条件`, 'info');
+        };
+    </script>
+</body>
+</html>
