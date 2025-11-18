@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HitClone Pro - AI视频分析工具演示</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      width: 100%;
+    }
+
+    .logo {
+      font-size: 80px;
+      margin-bottom: 20px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    h1 {
+      font-size: 42px;
+      margin: 20px 0;
+      font-weight: 700;
+    }
+
+    p {
+      font-size: 18px;
+      opacity: 0.9;
+      margin: 10px 0;
+      line-height: 1.6;
+    }
+
+    .loader {
+      margin: 30px auto;
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn {
+      margin-top: 30px;
+      padding: 15px 40px;
+      background: rgba(255,255,255,0.2);
+      border: 2px solid white;
+      border-radius: 50px;
+      color: white;
+      text-decoration: none;
+      display: inline-block;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: white;
+      color: #667eea;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .notice {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 768px) {
+      .logo { font-size: 60px; }
+      h1 { font-size: 32px; }
+      p { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🎬</div>
+    <h1>HitClone Pro</h1>
+    <p>AI驱动的视频分析工具</p>
+    <div class="loader" id="loader"></div>
+    <p id="status">正在启动演示版本...</p>
+
+    <div class="notice">
+      <strong>🎉 演示模式</strong><br>
+      使用预设数据，无需 API Key 配置
+    </div>
+
+    <button class="btn" id="startBtn" style="display: none;" onclick="startDemo()">
+      🚀 启动演示
+    </button>
+  </div>
+
+  <script>
+    // 设置演示模式标记
+    localStorage.setItem('hitclone_demo_mode', 'true');
+
+    // 自动跳转逻辑
+    function startDemo() {
+      window.location.href = './index.html';
+    }
+
+    // 检测是否在正确的路径
+    const currentPath = window.location.pathname;
+
+    // 如果在根路径，尝试自动跳转
+    if (currentPath.endsWith('/') || currentPath.endsWith('/HitClone-Pro-Demo') || currentPath.endsWith('/HitClone-Pro-Demo/')) {
+      // 2秒后自动跳转
+      setTimeout(() => {
+        document.getElementById('status').textContent = '即将跳转...';
+        startDemo();
+      }, 2000);
+    } else {
+      // 显示手动启动按钮
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('status').textContent = '点击下方按钮启动应用';
+      document.getElementById('startBtn').style.display = 'inline-block';
+    }
+  </script>
+</body>
+</html>
