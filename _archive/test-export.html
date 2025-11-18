@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试HTML导出功能</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 40px;
+            background: #f0f0f0;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        .log {
+            background: #f7f7f7;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 HTML导出功能测试</h1>
+        <p>这个页面用于测试StaticReportGenerator服务是否正常工作。</p>
+        
+        <button onclick="testBasicGeneration()">测试基础HTML生成</button>
+        <button onclick="testWithMockData()">测试模拟数据导出</button>
+        <button onclick="testErrorHandling()">测试错误处理</button>
+        
+        <div id="log" class="log">点击按钮开始测试...</div>
+    </div>
+
+    <script type="module">
+        import staticReportGenerator from './src/services/staticReportGenerator.js';
+        
+        window.staticReportGenerator = staticReportGenerator;
+        
+        window.testBasicGeneration = async () => {
+            const log = document.getElementById('log');
+            log.textContent = '🔄 测试基础HTML生成功能...\n';
+            
+            try {
+                // 创建测试数据
+                const mockAnalysisResults = {
+                    insights: {
+                        viralFactors: {
+                            hookStrength: 85,
+                            curiosityGap: 78,
+                            emotionalTrigger: 82,
+                            shareability: 76,
+                            retention: 80
+                        }
+                    },
+                    originalAnalysis: {},
+                    contentInfo: {
+                        title: '测试视频标题',
+                        channel: '测试频道',
+                        views: '10.5K views'
+                    },
+                    meta: {}
+                };
+                
+                const mockCurrentInput = {
+                    data: {
+                        title: '测试视频标题',
+                        channel: '测试频道',
+                        views: '10.5K views'
+                    }
+                };
+                
+                log.textContent += '✅ 测试数据创建成功\n';
+                log.textContent += '🔄 调用生成器...\n';
+                
+                await staticReportGenerator.generateStaticHTML(
+                    mockAnalysisResults,
+                    'creator-focused',
+                    mockCurrentInput
+                );
+                
+                log.textContent += '✅ HTML生成成功！请检查下载文件夹。\n';
+                
+            } catch (error) {
+                log.textContent += `❌ 测试失败: ${error.message}\n`;
+                console.error('测试失败:', error);
+            }
+        };
+        
+        window.testWithMockData = async () => {
+            const log = document.getElementById('log');
+            log.textContent = '🔄 测试完整模拟数据导出...\n';
+            
+            try {
+                // 更完整的测试数据
+                const complexMockData = {
+                    insights: {
+                        viralFactors: {
+                            hookStrength: 92,
+                            curiosityGap: 88,
+                            emotionalTrigger: 94,
+                            shareability: 85,
+                            retention: 87
+                        }
+                    },
+                    originalAnalysis: {
+                        creator_insights: {
+                            title_options: [
+                                '震撼！这个功能改变一切',
+                                '99%的人不知道的秘密',
+                                '3分钟看懂未来趋势'
+                            ]
+                        },
+                        data_prediction: {
+                            like_ratio: '15.2%'
+                        }
+                    },
+                    contentInfo: {
+                        title: 'AI革命：重新定义内容创作的未来',
+                        channel: 'TechInsight科技洞察',
+                        views: '128.5K views'
+                    },
+                    meta: {
+                        video_title: 'AI革命：重新定义内容创作的未来'
+                    }
+                };
+                
+                await staticReportGenerator.generateStaticHTML(
+                    complexMockData,
+                    'viral-dna',
+                    { data: complexMockData.contentInfo }
+                );
+                
+                log.textContent += '✅ 复杂数据导出成功！\n';
+                log.textContent += '📋 生成的文件包含完整的病毒DNA分析\n';
+                
+            } catch (error) {
+                log.textContent += `❌ 复杂数据测试失败: ${error.message}\n`;
+            }
+        };
+        
+        window.testErrorHandling = async () => {
+            const log = document.getElementById('log');
+            log.textContent = '🔄 测试错误处理...\n';
+            
+            try {
+                // 测试空数据
+                await staticReportGenerator.generateStaticHTML(null, 'creator-focused', null);
+                log.textContent += '✅ 空数据处理正常\n';
+                
+            } catch (error) {
+                log.textContent += `✅ 错误处理正常: ${error.message}\n`;
+            }
+        };
+        
+        console.log('🧪 HTML导出测试页面已加载');
+        console.log('StaticReportGenerator:', window.staticReportGenerator);
+    </script>
+</body>
+</html>

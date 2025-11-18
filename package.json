@@ -1,0 +1,48 @@
+{
+  "name": "hitclone-pro-artifact",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "HitClone Pro - Claude Artifacts视频分析工具",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "vite --port 3000 --host localhost",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "format": "prettier --write src/**/*.{js,jsx,css,md}"
+  },
+  "dependencies": {
+    "d3": "^7.8.5",
+    "http-proxy-middleware": "^3.0.5",
+    "lucide-react": "^0.263.1",
+    "node-fetch": "^3.3.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.3",
+    "autoprefixer": "^10.4.14",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "express": "^5.1.0",
+    "postcss": "^8.4.27",
+    "prettier": "^3.0.0",
+    "tailwindcss": "^3.3.3",
+    "terser": "^5.43.1",
+    "vite": "^4.4.5",
+    "vite-plugin-singlefile": "^0.13.5"
+  },
+  "keywords": [
+    "react",
+    "claude-artifacts",
+    "video-analysis",
+    "d3",
+    "tailwind"
+  ],
+  "author": "HitClone Pro Team",
+  "license": "MIT"
+}

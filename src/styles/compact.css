@@ -1,0 +1,99 @@
+/* HitClone Pro 精简版样式 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #000; color: #fff; height: 100vh; overflow: hidden; }
+
+/* 主布局 */
+.app-container { display: flex; height: 100vh; }
+.sidebar { width: 200px; background: #0A0A0A; border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
+.sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: bold; }
+.sidebar-nav { flex: 1; padding: 16px 0; }
+.nav-section { margin-bottom: 24px; }
+.nav-section-title { padding: 8px 20px; font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+.nav-item { display: flex; align-items: center; padding: 10px 20px; cursor: pointer; transition: all 0.2s; gap: 10px; }
+.nav-item:hover { background: rgba(255,255,255,0.05); }
+.nav-item.active { background: rgba(219,252,83,0.1); border-left: 3px solid #DBFC53; color: #DBFC53; }
+
+.main-container { flex: 1; display: flex; flex-direction: column; }
+.top-nav { height: 56px; background: #0A0A0A; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+.top-nav-tabs { display: flex; gap: 32px; }
+.top-nav-tab { color: rgba(255,255,255,0.7); cursor: pointer; transition: color 0.2s; font-weight: 500; }
+.top-nav-tab.active { color: white; }
+.top-nav-right { display: flex; align-items: center; gap: 20px; }
+.top-nav-btn { padding: 8px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; cursor: pointer; transition: all 0.2s; }
+.top-nav-btn:hover { background: rgba(255,255,255,0.05); }
+.top-nav-btn.active { background: rgba(219,252,83,0.1); border-color: #DBFC53; color: #DBFC53; }
+.credits { display: flex; align-items: center; gap: 8px; color: #DBFC53; font-weight: 500; }
+
+.content-wrapper { flex: 1; display: flex; overflow: hidden; }
+.content-area { flex: 1; background: #000; }
+.main-content { flex: 1; overflow-y: auto; }
+
+/* 开始页面 */
+.hitclone-start { flex: 1; padding: 40px; overflow-y: auto; }
+.start-header { text-align: center; margin-bottom: 60px; }
+.start-title { font-size: 48px; font-weight: 900; color: #DBFC53; margin-bottom: 16px; text-shadow: 0 0 40px rgba(219,252,83,0.5); }
+.start-subtitle { font-size: 20px; color: rgba(255,255,255,0.8); max-width: 600px; margin: 0 auto; }
+.start-input-section { max-width: 800px; margin: 0 auto; background: rgba(255,255,255,0.05); border-radius: 16px; padding: 32px; border: 1px solid rgba(255,255,255,0.1); }
+.input-mode-selector { display: flex; gap: 16px; margin-bottom: 32px; justify-content: center; }
+.mode-btn { padding: 12px 24px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: rgba(255,255,255,0.8); cursor: pointer; transition: all 0.3s; }
+.mode-btn.active { background: rgba(219,252,83,0.1); border-color: #DBFC53; color: #DBFC53; }
+.input-group { display: flex; gap: 16px; }
+.url-input { flex: 1; padding: 16px 20px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 16px; }
+.url-input:focus { outline: none; border-color: #DBFC53; }
+.url-input::placeholder { color: rgba(255,255,255,0.5); }
+.analyze-btn { padding: 16px 32px; background: linear-gradient(135deg, #DBFC53, #A8E063); border: none; border-radius: 8px; color: #000; font-weight: bold; font-size: 16px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
+.analyze-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(219,252,83,0.3); }
+.analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.spinner { width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.3); border-top: 2px solid #000; border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* 报告页面 */
+.report-container { flex: 1; padding: 24px; overflow-y: auto; }
+.report-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.report-title-section { display: flex; align-items: flex-start; gap: 20px; }
+.back-btn-small { padding: 8px 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; cursor: pointer; transition: all 0.2s; }
+.report-meta { flex: 1; }
+.report-main-title { font-size: 28px; font-weight: 700; color: #DBFC53; margin-bottom: 12px; }
+.report-tabs { display: flex; gap: 8px; margin-bottom: 32px; padding: 0 24px; }
+.tab-button { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.2s; }
+.tab-button.active { background: rgba(219,252,83,0.1); border-color: #DBFC53; color: #DBFC53; }
+.report-content { padding: 0 24px; }
+.section-title { font-size: 20px; font-weight: 600; color: #DBFC53; margin-bottom: 24px; }
+
+/* 病毒DNA */
+.viral-overview { background: rgba(255,255,255,0.05); border-radius: 16px; padding: 32px; margin-bottom: 40px; }
+.viral-score-main { display: flex; align-items: center; gap: 40px; }
+.score-circle { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, rgba(219,252,83,0.2), rgba(168,224,99,0.2)); border: 3px solid #DBFC53; }
+.score-number { font-size: 36px; font-weight: 900; color: #DBFC53; }
+.score-label { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+.score-insights p { font-size: 16px; line-height: 1.6; color: rgba(255,255,255,0.9); }
+
+/* 报告空状态 */
+.report-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 400px; text-align: center; }
+.empty-icon { font-size: 64px; margin-bottom: 24px; opacity: 0.5; }
+.report-empty h2 { font-size: 24px; color: white; margin-bottom: 12px; }
+.back-btn { padding: 12px 24px; background: #DBFC53; color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+/* Copilot面板 */
+.copilot-panel { width: 380px; background: #0A0A0A; border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
+.copilot-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+.copilot-title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.copilot-close { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.1); border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.copilot-messages { flex: 1; padding: 20px; overflow-y: auto; }
+.message { margin-bottom: 20px; }
+.message.assistant { display: flex; gap: 12px; }
+.assistant-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #DBFC53, #A8E063); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.message-content { background: rgba(255,255,255,0.05); padding: 12px 16px; border-radius: 12px; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.5; }
+.message.user .message-content { background: rgba(219,252,83,0.1); margin-left: auto; max-width: 80%; }
+.copilot-input { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+.input-wrapper { display: flex; gap: 12px; }
+.copilot-text-input { flex: 1; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; }
+.copilot-text-input:focus { outline: none; border-color: #DBFC53; }
+.copilot-text-input::placeholder { color: rgba(255,255,255,0.5); }
+.send-btn { padding: 12px 20px; background: #DBFC53; border: none; border-radius: 8px; color: #000; font-weight: 600; cursor: pointer; }
+
+/* API状态指示器 */
+.api-status-indicator { position: fixed; top: 16px; right: 16px; z-index: 1000; }
+.fade-in { animation: fadeIn 0.5s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }

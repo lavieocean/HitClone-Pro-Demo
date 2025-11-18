@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浏览器字幕获取测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .result {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { background: #e8f5e8; border: 1px solid #4caf50; }
+        .error { background: #ffeaea; border: 1px solid #f44336; }
+        .warning { background: #fff8e1; border: 1px solid #ff9800; }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover { background: #1976D2; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 3px;
+        }
+        .log-info { background: #e3f2fd; }
+        .log-success { background: #e8f5e8; }
+        .log-error { background: #ffebee; }
+        .log-warning { background: #fff3e0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 HitClone Pro 浏览器字幕获取测试</h1>
+        
+        <div class="test-section">
+            <h3>📹 测试YouTube字幕获取</h3>
+            <input type="text" id="videoUrl" placeholder="输入YouTube URL" 
+                   value="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+            <br>
+            <button onclick="testSubtitleFetch()" id="testBtn">开始测试</button>
+            <button onclick="clearLog()">清除日志</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 测试日志</h3>
+            <div id="logContainer" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 测试结果</h3>
+            <div id="resultContainer" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟 YouTube 数据服务的核心功能
+        class YouTubeDataServiceTest {
+            constructor() {
+                this.scrapingdogApiKey = '68660c4306b4f8aafe2d25dd'
+                this.scrapingdogBaseUrl = 'https://api.scrapingdog.com/youtube/transcripts'
+            }
+
+            extractVideoId(url) {
+                const patterns = [
+                    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+                    /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+                ]
+                
+                for (const pattern of patterns) {
+                    const match = url.match(pattern)
+                    if (match) {
+                        return match[1]
+                    }
+                }
+                
+                throw new Error('无法从URL中提取视频ID')
+            }
+
+            async fetchTranscriptViaAPI(videoId) {
+                const url = `${this.scrapingdogBaseUrl}?api_key=${this.scrapingdogApiKey}&v=${videoId}`
+                
+                log(`📡 API请求URL: ${url}`, 'info')
+                
+                const startTime = Date.now()
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'User-Agent': 'Mozilla/5.0 (compatible; HitClone/1.0)'
+                        }
+                    })
+                    
+                    const duration = Date.now() - startTime
+                    log(`📊 HTTP响应: ${response.status} ${response.statusText} (${duration}ms)`, 
+                        response.ok ? 'success' : 'error')
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+                    }
+                    
+                    const data = await response.json()
+                    log(`📝 响应数据大小: ${JSON.stringify(data).length} 字符`, 'info')
+                    
+                    const transcripts = data.transcripts || data.transcript || []
+                    
+                    log(`📋 响应结构分析:`, 'info')
+                    log(`   有错误: ${!!data.error}`, 'info')
+                    log(`   有字幕: ${!!(transcripts && transcripts.length > 0)}`, 'info')
+                    log(`   字幕条数: ${transcripts.length}`, 'info')
+                    
+                    if (data.error) {
+                        throw new Error(`API返回错误: ${data.error}`)
+                    }
+                    
+                    if (!transcripts || transcripts.length === 0) {
+                        throw new Error('视频无可用字幕')
+                    }
+                    
+                    // 显示前几条字幕样本
+                    log(`📄 字幕样本 (前3条):`, 'info')
+                    transcripts.slice(0, 3).forEach((item, index) => {
+                        log(`   ${index + 1}. ${item.text} (${item.start}s)`, 'info')
+                    })
+                    
+                    // 转换为SRT
+                    const srtContent = this.convertTranscriptToSRT(transcripts)
+                    log(`✅ SRT转换完成，长度: ${srtContent.length} 字符`, 'success')
+                    
+                    return {
+                        success: true,
+                        transcripts: transcripts,
+                        srtContent: srtContent,
+                        transcriptCount: transcripts.length,
+                        srtLength: srtContent.length
+                    }
+                    
+                } catch (error) {
+                    log(`❌ 字幕获取失败: ${error.message}`, 'error')
+                    return {
+                        success: false,
+                        error: error.message
+                    }
+                }
+            }
+
+            convertTranscriptToSRT(transcripts) {
+                let srtContent = ''
+                let index = 1
+                
+                for (const item of transcripts) {
+                    const start = item.start || 0
+                    const duration = item.duration || 3
+                    const end = start + duration
+                    const text = item.text || ''
+                    
+                    if (text.trim()) {
+                        srtContent += `${index}\n`
+                        srtContent += `${this.formatTime(start)} --> ${this.formatTime(end)}\n`
+                        srtContent += `${text.trim()}\n\n`
+                        index++
+                    }
+                }
+                
+                return srtContent
+            }
+
+            formatTime(seconds) {
+                const hours = Math.floor(seconds / 3600)
+                const minutes = Math.floor((seconds % 3600) / 60)
+                const secs = Math.floor(seconds % 60)
+                const ms = Math.floor((seconds % 1) * 1000)
+                
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${ms.toString().padStart(3, '0')}`
+            }
+        }
+
+        // 全局变量
+        const youtubeService = new YouTubeDataServiceTest()
+        let logContainer, resultContainer
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            logContainer = document.getElementById('logContainer')
+            resultContainer = document.getElementById('resultContainer')
+            log('🎬 浏览器字幕测试工具已就绪', 'success')
+        })
+
+        // 日志函数
+        function log(message, type = 'info') {
+            console.log(message)
+            
+            if (logContainer) {
+                const timestamp = new Date().toLocaleTimeString()
+                const logEntry = document.createElement('div')
+                logEntry.className = `log-entry log-${type}`
+                logEntry.textContent = `[${timestamp}] ${message}`
+                logContainer.appendChild(logEntry)
+                logContainer.scrollTop = logContainer.scrollHeight
+            }
+        }
+
+        function clearLog() {
+            if (logContainer) {
+                logContainer.innerHTML = ''
+            }
+            if (resultContainer) {
+                resultContainer.innerHTML = ''
+            }
+        }
+
+        // 主测试函数
+        async function testSubtitleFetch() {
+            const testBtn = document.getElementById('testBtn')
+            const videoUrl = document.getElementById('videoUrl').value
+            
+            if (!videoUrl) {
+                log('❌ 请输入YouTube URL', 'error')
+                return
+            }
+            
+            testBtn.disabled = true
+            testBtn.textContent = '测试中...'
+            
+            log('🚀 开始字幕获取测试...', 'info')
+            log(`📺 目标视频: ${videoUrl}`, 'info')
+            
+            try {
+                // 1. 提取视频ID
+                log('🔍 第一步: 提取视频ID...', 'info')
+                const videoId = youtubeService.extractVideoId(videoUrl)
+                log(`✅ 视频ID: ${videoId}`, 'success')
+                
+                // 2. 获取字幕
+                log('📡 第二步: 调用ScrapingDog API...', 'info')
+                const result = await youtubeService.fetchTranscriptViaAPI(videoId)
+                
+                // 3. 显示结果
+                log('📋 第三步: 分析结果...', 'info')
+                
+                if (result.success) {
+                    log(`🎉 字幕获取成功!`, 'success')
+                    log(`   原始条数: ${result.transcriptCount}`, 'success')
+                    log(`   SRT长度: ${result.srtLength} 字符`, 'success')
+                    
+                    // 显示详细结果
+                    const resultText = `✅ 测试成功！
+
+📊 统计信息:
+- 视频ID: ${videoId}
+- 字幕条数: ${result.transcriptCount}
+- SRT文件大小: ${result.srtLength} 字符
+
+📄 SRT内容预览:
+${result.srtContent.substring(0, 500)}${result.srtContent.length > 500 ? '\n\n...(已截取，完整内容请查看控制台)' : ''}
+`
+                    
+                    resultContainer.innerHTML = `<div class="success">${resultText}</div>`
+                    resultContainer.className = 'result success'
+                    
+                    console.log('完整SRT内容:', result.srtContent)
+                    
+                } else {
+                    log(`💥 字幕获取失败: ${result.error}`, 'error')
+                    
+                    const errorText = `❌ 测试失败
+
+🔍 错误信息:
+${result.error}
+
+💡 可能的原因:
+1. 视频没有字幕
+2. API配额超限
+3. 网络连接问题
+4. CORS策略限制
+5. 视频ID无效
+
+🛠️ 解决建议:
+1. 尝试其他有字幕的视频
+2. 检查网络连接
+3. 查看浏览器控制台的详细错误信息`
+                    
+                    resultContainer.innerHTML = `<div class="error">${errorText}</div>`
+                    resultContainer.className = 'result error'
+                }
+                
+            } catch (error) {
+                log(`💥 测试过程出错: ${error.message}`, 'error')
+                
+                const errorText = `❌ 测试异常
+
+🔍 错误信息:
+${error.message}
+
+📊 错误堆栈:
+${error.stack || '无堆栈信息'}`
+                
+                resultContainer.innerHTML = `<div class="error">${errorText}</div>`
+                resultContainer.className = 'result error'
+            } finally {
+                testBtn.disabled = false
+                testBtn.textContent = '开始测试'
+                log('🏁 测试完成', 'info')
+            }
+        }
+
+        // 键盘事件
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && document.getElementById('videoUrl') === document.activeElement) {
+                testSubtitleFetch()
+            }
+        })
+    </script>
+</body>
+</html>

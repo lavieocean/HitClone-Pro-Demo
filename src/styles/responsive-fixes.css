@@ -1,0 +1,517 @@
+/* 响应式设计修复 - 增强版 */
+
+/* 全局容器修复 */
+@media (max-width: 768px) {
+    /* 确保所有内容可以正常滚动和显示 */
+    * {
+        max-width: 100vw !important;
+        word-wrap: break-word !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* 修复主容器 */
+    .app-container, 
+    .main-container, 
+    .report-container,
+    .full-report-container {
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 8px !important;
+        margin: 0 !important;
+        overflow-x: hidden !important;
+    }
+    
+    /* 修复卡片和网格布局 */
+    .factor-card,
+    .prediction-card,
+    .strategy-card,
+    .report-card {
+        margin: 0 auto !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 12px !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* 修复History Reports页面 */
+    .history-reports-container {
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 8px !important;
+        overflow-x: hidden !important;
+    }
+    
+    /* 修复按钮容器 */
+    .button-container,
+    .action-buttons {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        justify-content: center !important;
+        width: 100% !important;
+    }
+    
+    /* 修复长文本溢出 */
+    .report-main-title {
+        font-size: 24px !important;
+        line-height: 1.3 !important;
+        word-break: break-word !important;
+        max-width: 100% !important;
+    }
+    
+    .section-title {
+        font-size: 18px !important;
+        margin-bottom: 16px !important;
+        word-break: break-word !important;
+    }
+    
+    /* 修复按钮和操作区域 */
+    .report-actions {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        justify-content: center !important;
+        width: 100% !important;
+    }
+    
+    .action-btn {
+        flex: 1 !important;
+        min-width: 120px !important;
+        text-align: center !important;
+        max-width: 100% !important;
+    }
+    
+    /* 修复一键恢复按钮 */
+    button[title*="一键"] {
+        width: 100% !important;
+        max-width: 300px !important;
+        margin: 8px auto !important;
+        display: block !important;
+    }
+    
+    /* 修复表格和数据展示 */
+    .data-table {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        width: 100% !important;
+    }
+    
+    /* 修复容器宽度 - 减少与增强样式的冲突 */
+    .main-container > div[style*="width"],
+    .report-container > div[style*="max-width"] {
+        max-width: 100vw;
+        width: 100%;
+        /* 只在主容器内应用，避免全局覆盖 */
+    }
+    
+    /* 修复报告生成页面 */
+    .full-report-enhanced,
+    .analysis-results-container {
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 8px !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* 修复固定定位元素 */
+    .fixed {
+        position: relative !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+    }
+    
+    /* 修复图表容器 */
+    .chart-container {
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* 修复进度条和指标 */
+    .progress-container {
+        width: 100% !important;
+    }
+    
+    /* 修复模态框 */
+    .modal {
+        margin: 10px;
+        max-width: calc(100vw - 20px);
+        max-height: calc(100vh - 20px);
+    }
+    
+    .modal-body {
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* 修复输入框和表单 */
+    .form-input,
+    .search-box,
+    textarea {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    
+    /* 修复视频相关组件 */
+    .video-preview,
+    .video-thumbnail,
+    .video-player {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16/9;
+    }
+    
+    /* 修复统计卡片 */
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+    }
+    
+    /* 修复导航和菜单 */
+    .nav-item {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+    
+    /* 修复标签和徽章 */
+    .tag,
+    .badge {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+    
+    /* 修复时间线和列表 */
+    .timeline-item,
+    .list-item {
+        padding: 12px;
+        margin-bottom: 8px;
+    }
+    
+    /* 修复工具栏 */
+    .toolbar {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px;
+    }
+    
+    /* 修复内容区域间距 */
+    .section {
+        margin-bottom: 24px;
+        padding: 16px;
+    }
+    
+    
+    /* 移动端导航优化 */
+    .app-container.mobile-nav .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        position: fixed;
+        z-index: 999;
+        height: 100vh;
+    }
+    
+    .app-container.mobile-nav .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    /* 移动端覆盖层 */
+    .mobile-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 998;
+        display: none;
+    }
+    
+    .mobile-overlay.show {
+        display: block;
+    }
+    
+    /* FullReportEnhanced 组件修复 - 减少覆盖的攻击性 */
+    /* 修复报告主容器 - 保留增强样式 */
+    .full-report-enhanced {
+        padding: 20px 16px;
+        max-width: 100%;
+        /* 删除 !important 以允许增强样式生效 */
+    }
+    
+    /* 修复报告标题区域 - 减少覆盖 */
+    .report-title-container {
+        margin-bottom: 24px;
+    }
+    
+    .report-title-container > div:first-child {
+        font-size: 48px;
+        margin-bottom: 16px;
+    }
+    
+    .report-title-container h1 {
+        font-size: 28px;
+        line-height: 1.2;
+        margin-bottom: 12px;
+        /* 允许渐变样式 */
+    }
+    
+    .report-title-container p {
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    
+    /* 修复KPI卡片网格 - 保留响应式的同时允许增强样式 */
+    .kpi-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
+        /* 在最小屏幕上使用1列，在大屏幕上允许多列 */
+    }
+    
+    /* 修复内容卡片 */
+    .content-card {
+        padding: 20px !important;
+        margin-bottom: 16px !important;
+    }
+    
+    .content-card h3 {
+        font-size: 18px !important;
+        margin-bottom: 12px !important;
+    }
+    
+    /* 修复数据表格 - 响应式优化 */
+    .data-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        /* 在大屏幕上允许多列布局 */
+    }
+    
+    /* 修复图表和可视化组件 */
+    .chart-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* 修复按钮组 */
+    .button-group {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    
+    .button-group button {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+    
+    /* 修复统计数字 */
+    .stat-number {
+        font-size: 24px !important;
+    }
+    
+    .stat-label {
+        font-size: 12px !important;
+    }
+    
+    /* 修复进度条 */
+    .progress-item {
+        margin-bottom: 12px !important;
+    }
+    
+    .progress-label {
+        font-size: 14px !important;
+        margin-bottom: 6px !important;
+    }
+    
+    /* 修复标签和徽章 */
+    .tag-grid {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)) !important;
+        gap: 8px !important;
+    }
+    
+    /* 修复内容分组 */
+    .content-section {
+        margin-bottom: 24px !important;
+        padding: 16px !important;
+    }
+    
+    .content-section-title {
+        font-size: 16px !important;
+        margin-bottom: 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .full-report-enhanced {
+        padding: 16px 12px !important;
+    }
+    
+    .report-title-container h1 {
+        font-size: 24px !important;
+    }
+    
+    .report-title-container > div:first-child {
+        font-size: 40px !important;
+    }
+    
+    .content-card {
+        padding: 16px !important;
+    }
+    
+    .stat-number {
+        font-size: 20px !important;
+    }
+}
+
+/* 超小屏幕适配 (320px) */
+@media (max-width: 480px) {
+    .report-container {
+        padding: 12px;
+    }
+    
+    .report-content {
+        padding: 0 12px;
+    }
+    
+    .report-tabs {
+        padding: 0 12px;
+        gap: 4px !important;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 8px;
+        margin-bottom: 16px !important;
+        /* 显示滚动提示 */
+        position: relative;
+    }
+    
+    /* 滚动提示阴影 */
+    .report-tabs::before {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 8px;
+        width: 20px;
+        background: linear-gradient(to left, rgba(0,0,0,0.8), transparent);
+        pointer-events: none;
+        z-index: 1;
+    }
+    
+    .tab-button {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-width: 100px !important;
+        scroll-snap-align: start;
+        min-height: 40px !important;
+        border-radius: 6px !important;
+        position: relative;
+        z-index: 0;
+    }
+    
+    /* 确保所有标签页都可以滚动查看 */
+    .report-tabs::after {
+        content: '';
+        padding-right: 24px;
+        flex-shrink: 0;
+    }
+    
+    .factor-card,
+    .prediction-card {
+        padding: 16px;
+    }
+    
+    .report-main-title {
+        font-size: 20px;
+    }
+    
+    .action-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+}
+
+/* 中等屏幕优化 (600px - 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+    .report-tabs {
+        padding: 0 16px;
+        gap: 6px;
+        scroll-snap-type: x mandatory;
+    }
+    
+    .tab-button {
+        padding: 10px 14px;
+        font-size: 13px;
+        min-width: 110px;
+        scroll-snap-align: start;
+    }
+    
+    .tab-button[style*="flexDirection: column"] {
+        min-width: 120px;
+    }
+}
+
+/* 平板适配 (768px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .factors-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    
+    .sidebar {
+        width: 180px;
+    }
+    
+    .report-tabs {
+        padding: 0 20px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .tab-button {
+        min-width: 140px;
+        scroll-snap-align: start;
+    }
+}
+
+/* 大屏幕优化 */
+@media (min-width: 1440px) {
+    .report-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .factors-grid {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    }
+}
+
+/* 横屏手机适配 */
+@media (max-width: 768px) and (orientation: landscape) {
+    .app-container {
+        flex-direction: row;
+    }
+    
+    .sidebar {
+        width: 200px;
+        height: 100vh;
+        border-right: 1px solid rgba(255,255,255,0.1);
+        border-bottom: none;
+    }
+    
+}
+
+/* 打印样式 */
+@media print {
+    .sidebar,
+    .report-actions,
+    .action-btn {
+        display: none !important;
+    }
+    
+    .main-container {
+        width: 100%;
+    }
+    
+    .report-container {
+        padding: 0;
+        overflow: visible;
+    }
+}

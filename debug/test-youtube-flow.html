@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YouTube 数据流测试</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: monospace; max-width: 1000px; margin: 20px auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        input { padding: 8px; width: 400px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 YouTube 数据流诊断工具</h1>
+    
+    <div class="test-section info">
+        <h3>🎬 测试URL</h3>
+        <input type="text" id="testUrl" value="https://youtu.be/f9Uk56LvBB0" placeholder="输入YouTube URL">
+        <button onclick="testFullFlow()">🧪 测试完整数据流</button>
+        <button onclick="testScrapingDogOnly()">🐕 仅测试ScrapingDog API</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>📊 测试结果</h3>
+        <div id="results"></div>
+    </div>
+    
+    <script>
+        function addResult(type, title, content) {
+            const container = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-section ${type}`;
+            div.innerHTML = `<h4>${title}</h4><div>${content}</div>`;
+            container.appendChild(div);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // 提取视频ID
+        function extractVideoId(url) {
+            const patterns = [
+                /(?:youtube\\.com\\/watch\\?v=|youtu\\.be\\/|youtube\\.com\\/embed\\/)([^&\\n?#]+)/,
+                /youtube\\.com\\/watch\\?.*v=([^&\\n?#]+)/
+            ];
+            
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) {
+                    return match[1];
+                }
+            }
+            return null;
+        }
+        
+        // 测试ScrapingDog API
+        async function testScrapingDogOnly() {
+            const url = document.getElementById('testUrl').value.trim();
+            const videoId = extractVideoId(url);
+            
+            if (!videoId) {
+                alert('无法提取视频ID');
+                return;
+            }
+            
+            clearResults();
+            addResult('info', '🚀 测试ScrapingDog API', `视频ID: ${videoId}`);
+            
+            try {
+                const apiUrl = `https://api.scrapingdog.com/youtube/transcripts?api_key=68660c4306b4f8aafe2d25dd&v=${videoId}`;
+                console.log('ScrapingDog URL:', apiUrl);
+                
+                const startTime = Date.now();
+                const response = await fetch(apiUrl);
+                const endTime = Date.now();
+                
+                addResult('info', '📡 API响应', 
+                    `状态: ${response.status} ${response.statusText}<br>
+                     响应时间: ${endTime - startTime}ms`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('ScrapingDog数据:', data);
+                    
+                    if (data.transcripts && data.transcripts.length > 0) {
+                        addResult('success', '✅ 字幕获取成功', 
+                            `字幕条数: ${data.transcripts.length}<br>
+                             前3条: ${data.transcripts.slice(0, 3).map(t => `${t.start}s: ${t.text.substring(0, 50)}...`).join('<br>')}`);
+                        
+                        // 测试转换为SRT
+                        const srtContent = convertToSRT(data.transcripts);
+                        addResult('success', '🔄 SRT转换', 
+                            `SRT长度: ${srtContent.length} 字符<br>
+                             <details><summary>查看SRT片段</summary><pre>${srtContent.substring(0, 500)}...</pre></details>`);
+                    } else {
+                        addResult('error', '❌ 无字幕数据', '该视频可能没有可用的字幕');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    addResult('error', '❌ API调用失败', `${response.status}: ${errorText}`);
+                }
+            } catch (error) {
+                console.error('ScrapingDog测试错误:', error);
+                addResult('error', '💥 网络错误', error.message);
+            }
+        }
+        
+        // 测试完整数据流（模拟YouTubeDataService）
+        async function testFullFlow() {
+            const url = document.getElementById('testUrl').value.trim();
+            
+            clearResults();
+            addResult('info', '🚀 开始完整数据流测试', `URL: ${url}`);
+            
+            try {
+                // 1. 测试URL验证
+                const videoId = extractVideoId(url);
+                if (!videoId) {
+                    addResult('error', '❌ URL验证失败', '无法从URL提取视频ID');
+                    return;
+                }
+                addResult('success', '✅ URL验证成功', `视频ID: ${videoId}`);
+                
+                // 2. 测试oEmbed API（基础视频信息）
+                try {
+                    const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+                    const oembedResponse = await fetch(oembedUrl);
+                    
+                    if (oembedResponse.ok) {
+                        const oembedData = await oembedResponse.json();
+                        addResult('success', '✅ oEmbed基础信息获取成功', 
+                            `标题: ${oembedData.title}<br>
+                             频道: ${oembedData.author_name}<br>
+                             频道URL: ${oembedData.author_url}`);
+                    } else {
+                        addResult('error', '❌ oEmbed失败', `状态: ${oembedResponse.status}`);
+                    }
+                } catch (oembedError) {
+                    addResult('error', '❌ oEmbed网络错误', oembedError.message);
+                }
+                
+                // 3. 测试ScrapingDog API字幕获取
+                try {
+                    const apiUrl = `https://api.scrapingdog.com/youtube/transcripts?api_key=68660c4306b4f8aafe2d25dd&v=${videoId}`;
+                    const startTime = Date.now();
+                    const response = await fetch(apiUrl);
+                    const endTime = Date.now();
+                    
+                    addResult('info', '📡 ScrapingDog API调用', 
+                        `状态: ${response.status}<br>响应时间: ${endTime - startTime}ms`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.transcripts && data.transcripts.length > 0) {
+                            const srtContent = convertToSRT(data.transcripts);
+                            addResult('success', '✅ 字幕处理成功', 
+                                `原始条数: ${data.transcripts.length}<br>
+                                 SRT长度: ${srtContent.length} 字符<br>
+                                 可用于AI分析: 是`);
+                            
+                            // 4. 模拟数据结构组装
+                            const finalData = {
+                                url: url,
+                                videoId: videoId,
+                                title: '测试视频标题',
+                                hasSubtitles: true,
+                                srtContent: srtContent
+                            };
+                            
+                            addResult('success', '✅ 数据结构组装完成', 
+                                `<pre>${JSON.stringify(finalData, null, 2).substring(0, 300)}...</pre>`);
+                            
+                        } else {
+                            addResult('error', '❌ 无字幕数据', '该视频没有可用的字幕');
+                        }
+                    } else {
+                        const errorText = await response.text();
+                        addResult('error', '❌ 字幕获取失败', `${response.status}: ${errorText}`);
+                    }
+                } catch (apiError) {
+                    addResult('error', '❌ ScrapingDog API错误', apiError.message);
+                }
+                
+            } catch (error) {
+                console.error('完整流程测试错误:', error);
+                addResult('error', '💥 流程测试失败', error.message);
+            }
+        }
+        
+        // SRT转换函数
+        function convertToSRT(transcripts) {
+            let srtContent = '';
+            let index = 1;
+            
+            for (const item of transcripts) {
+                const start = item.start || 0;
+                const duration = item.duration || 3;
+                const end = start + duration;
+                const text = item.text || '';
+                
+                if (text.trim()) {
+                    srtContent += `${index}\\n`;
+                    srtContent += `${formatTime(start)} --> ${formatTime(end)}\\n`;
+                    srtContent += `${text.trim()}\\n\\n`;
+                    index++;
+                }
+            }
+            
+            return srtContent;
+        }
+        
+        // 时间格式化
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            const milliseconds = Math.floor((seconds % 1) * 1000);
+            
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${milliseconds.toString().padStart(3, '0')}`;
+        }
+        
+        // 页面加载完成后的提示
+        window.onload = function() {
+            console.log('🔍 YouTube数据流诊断工具已加载');
+            addResult('info', '📋 使用说明', 
+                '1. 输入YouTube URL<br>' +
+                '2. 点击"测试完整数据流"检查整个处理链<br>' +
+                '3. 点击"仅测试ScrapingDog API"单独测试字幕API<br>' +
+                '4. 查看浏览器控制台获取详细日志');
+        };
+    </script>
+</body>
+</html>
