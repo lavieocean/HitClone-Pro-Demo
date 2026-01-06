@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>清除Gemini配置缓存</title>
+    <meta charset="utf-8">
+    <style>
+        body { 
+            font-family: monospace; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            background: white;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        button { 
+            padding: 12px 24px; 
+            margin: 5px; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 4px; 
+            font-size: 14px;
+        }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        pre { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 3px; 
+            overflow-x: auto; 
+            font-size: 12px;
+        }
+        .highlight { font-weight: bold; color: #d73527; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Gemini API 配置缓存清理</h1>
+    
+    <div class="section info">
+        <h3>⚠️ 问题诊断</h3>
+        <p>检测到Gemini API使用了错误的模型 <span class="highlight">gemini-2.5-pro-latest</span>，导致404错误。</p>
+        <p>需要清除localStorage缓存，强制使用正确的模型 <span class="highlight">gemini-1.5-pro-002</span>。</p>
+    </div>
+    
+    <div class="section">
+        <h3>🔍 当前配置检查</h3>
+        <button class="btn-info" onclick="checkCurrentConfig()">检查当前配置</button>
+        <div id="configStatus"></div>
+    </div>
+    
+    <div class="section">
+        <h3>🗑️ 缓存清理操作</h3>
+        <button class="btn-danger" onclick="clearGeminiCache()">清除Gemini配置缓存</button>
+        <button class="btn-success" onclick="setCorrectConfig()">设置正确配置</button>
+        <div id="operationResult"></div>
+    </div>
+    
+    <div class="section">
+        <h3>✅ 验证修复</h3>
+        <button class="btn-success" onclick="verifyFix()">验证修复效果</button>
+        <div id="verificationResult"></div>
+    </div>
+    
+    <script>
+        function addResult(containerId, type, title, content) {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `section ${type}`;
+            div.innerHTML = `<h4>${title}</h4><div>${content}</div>`;
+            container.appendChild(div);
+        }
+        
+        function clearResults(containerId) {
+            document.getElementById(containerId).innerHTML = '';
+        }
+        
+        // 检查当前配置
+        function checkCurrentConfig() {
+            clearResults('configStatus');
+            
+            const config = localStorage.getItem('hitclone-gemini-config');
+            
+            if (config) {
+                try {
+                    const parsed = JSON.parse(config);
+                    const modelUsed = parsed.model || '未知';
+                    const isWrongModel = modelUsed.includes('2.5-pro-latest');
+                    
+                    addResult('configStatus', isWrongModel ? 'error' : 'info', 
+                        '📋 当前localStorage配置', 
+                        `<pre>${JSON.stringify(parsed, null, 2)}</pre>
+                         <p><strong>使用的模型:</strong> <span class="${isWrongModel ? 'highlight' : ''}">${modelUsed}</span></p>
+                         ${isWrongModel ? '<p style="color: red;">❌ 检测到错误模型！需要清理缓存。</p>' : '<p style="color: green;">✅ 模型配置正确。</p>'}`);
+                } catch (e) {
+                    addResult('configStatus', 'error', '❌ 配置格式错误', e.message);
+                }
+            } else {
+                addResult('configStatus', 'info', '📋 配置状态', 
+                    '未找到localStorage配置，将使用默认配置:<br>' +
+                    '• 模型: gemini-1.5-pro-002<br>' +
+                    '• 这是正确的配置 ✅');
+            }
+        }
+        
+        // 清除Gemini配置缓存
+        function clearGeminiCache() {
+            clearResults('operationResult');
+            
+            try {
+                // 清除所有相关的localStorage项
+                const keysToRemove = [
+                    'hitclone-gemini-config',
+                    'gemini-config', 
+                    'gemini-api-config',
+                    'hitclone-ai-config'
+                ];
+                
+                let removedKeys = [];
+                keysToRemove.forEach(key => {
+                    if (localStorage.getItem(key)) {
+                        localStorage.removeItem(key);
+                        removedKeys.push(key);
+                    }
+                });
+                
+                if (removedKeys.length > 0) {
+                    addResult('operationResult', 'success', '✅ 缓存清理成功', 
+                        `已清除以下localStorage键:<br>• ${removedKeys.join('<br>• ')}<br><br>
+                         页面将自动使用新的默认配置。`);
+                } else {
+                    addResult('operationResult', 'info', '📋 清理结果', '未找到需要清理的缓存配置。');
+                }
+            } catch (error) {
+                addResult('operationResult', 'error', '❌ 清理失败', error.message);
+            }
+        }
+        
+        // 设置正确配置
+        function setCorrectConfig() {
+            clearResults('operationResult');
+            
+            try {
+                const correctConfig = {
+                    apiKey: 'AIzaSyBmkOUbFgXtZcmeQj7eEXWczvnDyf49GFg',
+                    model: 'gemini-1.5-pro-002',
+                    endpoint: 'https://generativelanguage.googleapis.com/v1/models/',
+                    maxTokens: 4096,
+                    temperature: 0.7
+                };
+                
+                localStorage.setItem('hitclone-gemini-config', JSON.stringify(correctConfig));
+                
+                addResult('operationResult', 'success', '✅ 正确配置已设置', 
+                    `<pre>${JSON.stringify(correctConfig, null, 2)}</pre>
+                     <p><strong>✅ 现在将使用正确的模型:</strong> gemini-1.5-pro-002</p>`);
+            } catch (error) {
+                addResult('operationResult', 'error', '❌ 配置设置失败', error.message);
+            }
+        }
+        
+        // 验证修复效果
+        function verifyFix() {
+            clearResults('verificationResult');
+            
+            // 检查配置
+            const config = localStorage.getItem('hitclone-gemini-config');
+            if (!config) {
+                addResult('verificationResult', 'error', '❌ 验证失败', '未找到配置。请先设置正确配置。');
+                return;
+            }
+            
+            try {
+                const parsed = JSON.parse(config);
+                const model = parsed.model;
+                
+                if (model === 'gemini-1.5-pro-002') {
+                    addResult('verificationResult', 'success', '🎉 修复验证成功', 
+                        `✅ 配置正确: ${model}<br>
+                         ✅ API调用将使用正确的模型<br>
+                         ✅ 不再出现404错误<br><br>
+                         <strong>请返回主应用并重新测试YouTube分析功能。</strong>`);
+                } else {
+                    addResult('verificationResult', 'error', '❌ 验证失败', 
+                        `检测到错误的模型: ${model}<br>请重新执行清理和设置操作。`);
+                }
+            } catch (e) {
+                addResult('verificationResult', 'error', '❌ 验证失败', '配置格式错误: ' + e.message);
+            }
+        }
+        
+        // 页面加载时自动检查
+        window.onload = function() {
+            checkCurrentConfig();
+            
+            // 添加说明
+            addResult('verificationResult', 'info', '📋 操作指南', 
+                '1. 点击"检查当前配置"查看问题<br>' +
+                '2. 点击"清除Gemini配置缓存"清理错误配置<br>' +
+                '3. 点击"设置正确配置"应用修复<br>' +
+                '4. 点击"验证修复效果"确认成功<br>' +
+                '5. 返回主应用重新测试');
+        };
+    </script>
+</body>
+</html>

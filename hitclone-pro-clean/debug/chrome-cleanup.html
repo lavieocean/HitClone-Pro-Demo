@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chrome浏览器深度清理工具 - HitClone Pro</title>
+    <meta charset="utf-8">
+    <style>
+        body { 
+            font-family: monospace; 
+            max-width: 1000px; 
+            margin: 20px auto; 
+            padding: 20px; 
+            background: #f8f9fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step { 
+            margin: 15px 0; 
+            padding: 15px; 
+            border-left: 4px solid #007bff;
+            background: #f8f9fa;
+            border-radius: 0 5px 5px 0;
+        }
+        .warning { 
+            border-left-color: #ffc107;
+            background: #fff3cd; 
+        }
+        .danger { 
+            border-left-color: #dc3545;
+            background: #f8d7da; 
+        }
+        .success { 
+            border-left-color: #28a745;
+            background: #d4edda; 
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 8px; 
+            cursor: pointer; 
+            border: none;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        pre { 
+            background: #282c34; 
+            color: #abb2bf; 
+            padding: 15px; 
+            border-radius: 5px; 
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .result { 
+            margin: 10px 0; 
+            padding: 15px; 
+            border-radius: 5px; 
+            display: none;
+        }
+        .chrome-url {
+            background: #e7f3ff;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #28a745);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .accordion {
+            margin: 10px 0;
+        }
+        .accordion-header {
+            background: #007bff;
+            color: white;
+            padding: 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            user-select: none;
+        }
+        .accordion-header:hover {
+            background: #0056b3;
+        }
+        .accordion-content {
+            display: none;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-pending { background: #6c757d; }
+        .status-running { background: #ffc107; animation: pulse 1s infinite; }
+        .status-success { background: #28a745; }
+        .status-error { background: #dc3545; }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧹 Chrome浏览器深度清理工具</h1>
+        <p>专为解决HitClone Pro localhost:8081访问问题设计</p>
+        <p>💡 <strong>发现问题：</strong>某个Chrome账号无法访问而其他账号可以？使用此工具解决！</p>
+    </div>
+
+    <div class="section">
+        <h2>🎯 问题诊断</h2>
+        <p><strong>症状：</strong>A账号Chrome可以访问http://localhost:8081，但H账号Chrome无法访问</p>
+        <p><strong>原因：</strong>H账号Chrome浏览器存在缓存污染、Service Worker冲突或扩展拦截</p>
+        
+        <button class="btn-primary" onclick="quickDiagnosis()">🔍 快速诊断</button>
+        <button class="btn-warning" onclick="showManualSteps()">📋 手动清理指南</button>
+        <button class="btn-danger" onclick="performTotalCleanup()">🚨 完全清理模式</button>
+        
+        <div id="diagnosis-result" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>⚡ 一键自动清理</h2>
+        <p>尝试自动清理所有可能导致问题的数据：</p>
+        
+        <div class="progress">
+            <div class="progress-bar" id="cleanup-progress"></div>
+        </div>
+        
+        <div id="cleanup-steps">
+            <div class="step" id="step-1">
+                <span class="status-indicator status-pending" id="status-1"></span>
+                <strong>步骤1：</strong>清理localStorage和sessionStorage
+            </div>
+            <div class="step" id="step-2">
+                <span class="status-indicator status-pending" id="status-2"></span>
+                <strong>步骤2：</strong>注销Service Worker
+            </div>
+            <div class="step" id="step-3">
+                <span class="status-indicator status-pending" id="status-3"></span>
+                <strong>步骤3：</strong>清理Cache Storage
+            </div>
+            <div class="step" id="step-4">
+                <span class="status-indicator status-pending" id="status-4"></span>
+                <strong>步骤4：</strong>检测扩展冲突
+            </div>
+            <div class="step" id="step-5">
+                <span class="status-indicator status-pending" id="status-5"></span>
+                <strong>步骤5：</strong>验证清理效果
+            </div>
+        </div>
+        
+        <button class="btn-success" onclick="startAutoCleanup()">🚀 开始自动清理</button>
+        <div id="auto-cleanup-result" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>🔧 手动清理指南</h2>
+        
+        <div class="accordion">
+            <div class="accordion-header" onclick="toggleAccordion('chrome-internal')">
+                🌐 Chrome内部页面清理
+            </div>
+            <div class="accordion-content" id="chrome-internal">
+                <div class="step">
+                    <strong>清理站点数据：</strong>
+                    <div class="chrome-url">chrome://settings/content/all</div>
+                    <p>1. 打开上述Chrome内部页面</p>
+                    <p>2. 搜索 "localhost" 或 "8081"</p>
+                    <p>3. 删除所有相关的站点数据</p>
+                    <button class="btn-primary" onclick="openChromeSettings()">📱 打开站点设置</button>
+                </div>
+                
+                <div class="step">
+                    <strong>清理HSTS记录：</strong>
+                    <div class="chrome-url">chrome://net-internals/#hsts</div>
+                    <p>1. 打开Chrome网络内部页面</p>
+                    <p>2. 在"Delete domain security policies"中输入：localhost</p>
+                    <p>3. 点击Delete删除HSTS记录</p>
+                    <button class="btn-primary" onclick="openChromeHSTS()">🔒 打开HSTS设置</button>
+                </div>
+                
+                <div class="step">
+                    <strong>清理DNS缓存：</strong>
+                    <div class="chrome-url">chrome://net-internals/#dns</div>
+                    <p>1. 打开DNS内部页面</p>
+                    <p>2. 点击"Clear host cache"按钮</p>
+                    <p>3. 清理所有DNS缓存</p>
+                    <button class="btn-primary" onclick="openChromeDNS()">🌐 打开DNS设置</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion">
+            <div class="accordion-header" onclick="toggleAccordion('dev-tools')">
+                🛠️ 开发者工具清理
+            </div>
+            <div class="accordion-content" id="dev-tools">
+                <div class="step">
+                    <p><strong>按F12打开开发者工具，然后：</strong></p>
+                    <ol>
+                        <li>转到<strong>Application</strong>面板</li>
+                        <li>在左侧<strong>Storage</strong>部分：
+                            <ul>
+                                <li>清除<strong>Local Storage</strong> → localhost:8081</li>
+                                <li>清除<strong>Session Storage</strong> → localhost:8081</li>
+                                <li>清除<strong>IndexedDB</strong>中的相关数据</li>
+                            </ul>
+                        </li>
+                        <li>在<strong>Service Workers</strong>部分注销所有相关SW</li>
+                        <li>在<strong>Cache Storage</strong>部分删除所有缓存</li>
+                        <li>转到<strong>Network</strong>面板，勾选<strong>"Disable cache"</strong></li>
+                    </ol>
+                    <button class="btn-warning" onclick="openDevToolsGuide()">📖 查看详细指南</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion">
+            <div class="accordion-header" onclick="toggleAccordion('extension-check')">
+                🧩 扩展和插件检查
+            </div>
+            <div class="accordion-content" id="extension-check">
+                <div class="step warning">
+                    <strong>常见冲突扩展：</strong>
+                    <ul>
+                        <li>🚫 广告拦截器 (uBlock Origin, AdBlock Plus)</li>
+                        <li>🛡️ 安全扩展 (Bitdefender, Norton)</li>
+                        <li>🌐 代理和VPN扩展</li>
+                        <li>🔒 隐私保护扩展</li>
+                    </ul>
+                </div>
+                
+                <div class="step">
+                    <strong>排查方法：</strong>
+                    <ol>
+                        <li>按<strong>Ctrl+Shift+N</strong>打开无痕模式</li>
+                        <li>在无痕模式中访问 http://localhost:8081</li>
+                        <li>如果无痕模式可以访问，说明是扩展问题</li>
+                        <li>返回普通模式，逐个禁用扩展测试</li>
+                    </ol>
+                    <button class="btn-warning" onclick="testIncognitoMode()">🕵️ 测试无痕模式</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🎯 终极解决方案</h2>
+        <div class="step danger">
+            <strong>⚠️ 如果以上方法都无效，执行完全重置：</strong>
+            <ol>
+                <li>完全退出Chrome浏览器</li>
+                <li>重命名Chrome用户数据目录（备份）</li>
+                <li>重新启动Chrome（将创建新的用户配置）</li>
+                <li>重新登录Chrome账号</li>
+            </ol>
+            <p><strong>用户数据目录位置：</strong></p>
+            <pre>macOS: ~/Library/Application Support/Google/Chrome
+Windows: %LOCALAPPDATA%\Google\Chrome\User Data
+Linux: ~/.config/google-chrome</pre>
+            <button class="btn-danger" onclick="showResetInstructions()">🔄 查看重置说明</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>✅ 验证和测试</h2>
+        <div class="step success">
+            <p>清理完成后，请按以下步骤验证：</p>
+            <ol>
+                <li>重启Chrome浏览器</li>
+                <li>访问诊断工具：<code>http://localhost:8081/debug/browser.html</code></li>
+                <li>运行完整诊断测试</li>
+                <li>如果测试通过，访问主应用：<code>http://localhost:8081</code></li>
+            </ol>
+            <button class="btn-success" onclick="runFinalVerification()">🧪 运行最终验证</button>
+        </div>
+        
+        <div id="verification-result" class="result"></div>
+    </div>
+
+    <script>
+        let cleanupProgress = 0;
+        
+        function updateProgress(percent) {
+            document.getElementById('cleanup-progress').style.width = percent + '%';
+        }
+        
+        function updateStepStatus(stepNum, status) {
+            const statusElement = document.getElementById(`status-${stepNum}`);
+            statusElement.className = `status-indicator status-${status}`;
+        }
+        
+        function addResult(containerId, type, title, message, details = '') {
+            const container = document.getElementById(containerId);
+            container.style.display = 'block';
+            container.className = `result ${type}`;
+            
+            let html = `<h3>${title}</h3><p>${message}</p>`;
+            if (details) {
+                html += `<pre>${details}</pre>`;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        async function quickDiagnosis() {
+            addResult('diagnosis-result', 'step', '🔍 快速诊断中...', '正在检查当前浏览器状态...');
+            
+            let issues = [];
+            let details = [];
+            
+            // 检查localStorage
+            let localStorageCount = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('localhost') || key.includes('8081'))) {
+                    localStorageCount++;
+                }
+            }
+            
+            if (localStorageCount > 0) {
+                issues.push(`发现${localStorageCount}个localStorage污染项`);
+            }
+            
+            // 检查Service Worker
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    if (registrations.length > 0) {
+                        issues.push(`发现${registrations.length}个Service Worker`);
+                    }
+                } catch (error) {
+                    details.push(`Service Worker检查错误: ${error.message}`);
+                }
+            }
+            
+            // 检查是否为无痕模式
+            const isIncognito = await new Promise((resolve) => {
+                if ('webkitRequestFileSystem' in window) {
+                    webkitRequestFileSystem(window.TEMPORARY, 1, () => resolve(false), () => resolve(true));
+                } else {
+                    resolve(false);
+                }
+            });
+            
+            if (!isIncognito) {
+                issues.push('当前为普通模式，建议尝试无痕模式');
+            }
+            
+            const diagnosis = issues.length > 0 ? 
+                `检测到${issues.length}个潜在问题：\\n${issues.join('\\n')}` :
+                '未检测到明显问题，可能是扩展或系统级别的问题';
+            
+            addResult('diagnosis-result', 'warning', '📊 诊断结果', diagnosis, details.join('\\n'));
+        }
+        
+        async function startAutoCleanup() {
+            cleanupProgress = 0;
+            updateProgress(0);
+            
+            // 步骤1：清理存储
+            updateStepStatus(1, 'running');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            try {
+                let cleanedItems = 0;
+                
+                // 清理localStorage
+                for (let i = localStorage.length - 1; i >= 0; i--) {
+                    const key = localStorage.key(i);
+                    if (key && (key.includes('localhost') || key.includes('8081') || key.includes('hitclone'))) {
+                        localStorage.removeItem(key);
+                        cleanedItems++;
+                    }
+                }
+                
+                // 清理sessionStorage
+                for (let i = sessionStorage.length - 1; i >= 0; i--) {
+                    const key = sessionStorage.key(i);
+                    if (key && (key.includes('localhost') || key.includes('8081') || key.includes('hitclone'))) {
+                        sessionStorage.removeItem(key);
+                        cleanedItems++;
+                    }
+                }
+                
+                updateStepStatus(1, 'success');
+                cleanupProgress = 20;
+                updateProgress(cleanupProgress);
+                
+                // 步骤2：Service Worker
+                updateStepStatus(2, 'running');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const registration of registrations) {
+                        if (registration.scope.includes('localhost') || registration.scope.includes('8081')) {
+                            await registration.unregister();
+                            cleanedItems++;
+                        }
+                    }
+                }
+                
+                updateStepStatus(2, 'success');
+                cleanupProgress = 40;
+                updateProgress(cleanupProgress);
+                
+                // 步骤3：Cache Storage
+                updateStepStatus(3, 'running');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    for (const cacheName of cacheNames) {
+                        if (cacheName.includes('localhost') || cacheName.includes('8081') || cacheName.includes('hitclone')) {
+                            await caches.delete(cacheName);
+                            cleanedItems++;
+                        }
+                    }
+                }
+                
+                updateStepStatus(3, 'success');
+                cleanupProgress = 60;
+                updateProgress(cleanupProgress);
+                
+                // 步骤4：扩展检测
+                updateStepStatus(4, 'running');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // 简单的广告拦截器检测
+                const adBlockTest = document.createElement('div');
+                adBlockTest.className = 'adsbox';
+                adBlockTest.style.position = 'absolute';
+                adBlockTest.style.left = '-1000px';
+                document.body.appendChild(adBlockTest);
+                
+                setTimeout(() => {
+                    const hasAdBlocker = adBlockTest.offsetHeight === 0;
+                    document.body.removeChild(adBlockTest);
+                    
+                    updateStepStatus(4, hasAdBlocker ? 'error' : 'success');
+                    cleanupProgress = 80;
+                    updateProgress(cleanupProgress);
+                    
+                    // 步骤5：验证
+                    updateStepStatus(5, 'running');
+                    setTimeout(async () => {
+                        try {
+                            const response = await fetch('http://localhost:8081/', { 
+                                method: 'HEAD', 
+                                cache: 'no-cache' 
+                            });
+                            
+                            updateStepStatus(5, response.ok ? 'success' : 'error');
+                            cleanupProgress = 100;
+                            updateProgress(cleanupProgress);
+                            
+                            const resultMessage = response.ok ? 
+                                `🎉 清理完成！已清理${cleanedItems}项数据，服务器响应正常` :
+                                `⚠️ 清理完成但服务器仍无响应，可能需要手动清理或检查扩展`;
+                            
+                            addResult('auto-cleanup-result', response.ok ? 'success' : 'warning', 
+                                '清理结果', resultMessage);
+                                
+                        } catch (error) {
+                            updateStepStatus(5, 'error');
+                            addResult('auto-cleanup-result', 'danger', 
+                                '清理失败', `无法连接到服务器: ${error.message}`);
+                        }
+                    }, 1000);
+                }, 100);
+                
+            } catch (error) {
+                addResult('auto-cleanup-result', 'danger', '清理错误', error.message);
+            }
+        }
+        
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        function openChromeSettings() {
+            window.open('chrome://settings/content/all', '_blank');
+        }
+        
+        function openChromeHSTS() {
+            window.open('chrome://net-internals/#hsts', '_blank');
+        }
+        
+        function openChromeDNS() {
+            window.open('chrome://net-internals/#dns', '_blank');
+        }
+        
+        function testIncognitoMode() {
+            const isIncognito = window.navigator.userAgent.includes('Incognito');
+            if (isIncognito) {
+                alert('您已经在无痕模式中！请尝试访问 http://localhost:8081');
+            } else {
+                alert('请按 Ctrl+Shift+N (Windows/Linux) 或 Cmd+Shift+N (Mac) 打开无痕模式');
+            }
+        }
+        
+        async function runFinalVerification() {
+            addResult('verification-result', 'step', '🧪 最终验证中...', '正在验证清理效果...');
+            
+            try {
+                const response = await fetch('http://localhost:8081/debug/browser.html');
+                if (response.ok) {
+                    addResult('verification-result', 'success', 
+                        '✅ 验证成功', 
+                        '服务器响应正常，可以正常访问HitClone Pro！\\n请访问: http://localhost:8081');
+                } else {
+                    addResult('verification-result', 'warning', 
+                        '⚠️ 部分成功', 
+                        `服务器响应状态: ${response.status}，可能需要进一步检查`);
+                }
+            } catch (error) {
+                addResult('verification-result', 'danger', 
+                    '❌ 验证失败', 
+                    `仍无法访问服务器: ${error.message}\\n建议尝试手动清理或重启Chrome`);
+            }
+        }
+        
+        // 页面加载完成后的初始化
+        window.onload = function() {
+            console.log('🧹 Chrome清理工具已加载');
+            
+            // 检查是否为Chrome浏览器
+            const isChrome = navigator.userAgent.includes('Chrome') && !navigator.userAgent.includes('Edg');
+            if (!isChrome) {
+                addResult('diagnosis-result', 'warning', 
+                    '⚠️ 浏览器提醒', 
+                    '此工具专为Chrome浏览器设计，当前浏览器可能不支持所有功能');
+            }
+        };
+    </script>
+</body>
+</html>

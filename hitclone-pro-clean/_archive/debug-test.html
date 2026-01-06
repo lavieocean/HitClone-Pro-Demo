@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrapingdog API调试测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a1a; color: #fff; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .input-group { margin: 20px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #444; background: #333; color: #fff; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .output { background: #333; padding: 15px; border-radius: 4px; margin: 20px 0; white-space: pre-wrap; font-family: monospace; }
+        .success { background: #1e5631; }
+        .error { background: #721c24; }
+        .loading { background: #1e3a5f; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Scrapingdog API调试测试</h1>
+        
+        <div class="input-group">
+            <label for="videoUrl">YouTube URL:</label>
+            <input type="text" id="videoUrl" placeholder="https://www.youtube.com/watch?v=..." value="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+            <button onclick="testApi()">测试API调用</button>
+        </div>
+        
+        <div id="output" class="output">等待测试...</div>
+        
+        <div class="input-group">
+            <h3>📊 调试信息</h3>
+            <div id="debugInfo" class="output">无调试信息</div>
+        </div>
+    </div>
+
+    <script>
+        // Scrapingdog API配置
+        const API_KEY = '68660c4306b4f8aafe2d25dd';
+        const BASE_URL = 'https://api.scrapingdog.com/youtube/transcripts';
+        
+        // 历史记录
+        let callHistory = [];
+        
+        function extractVideoId(url) {
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+                /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+            ];
+            
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) {
+                    return match[1];
+                }
+            }
+            
+            throw new Error('无法从URL中提取视频ID');
+        }
+        
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            const ms = Math.floor((seconds % 1) * 1000);
+            
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${ms.toString().padStart(3, '0')}`;
+        }
+        
+        function convertToSRT(transcript) {
+            let srtContent = '';
+            let index = 1;
+            
+            for (const item of transcript) {
+                const start = item.start || 0;
+                const duration = item.duration || 3;
+                const end = start + duration;
+                const text = item.text || '';
+                
+                if (text.trim()) {
+                    srtContent += `${index}\\n`;
+                    srtContent += `${formatTime(start)} --> ${formatTime(end)}\\n`;
+                    srtContent += `${text.trim()}\\n\\n`;
+                    index++;
+                }
+            }
+            
+            return srtContent;
+        }
+        
+        async function testApi() {
+            const url = document.getElementById('videoUrl').value.trim();
+            const output = document.getElementById('output');
+            const debugInfo = document.getElementById('debugInfo');
+            
+            if (!url) {
+                output.className = 'output error';
+                output.textContent = '请输入YouTube URL';
+                return;
+            }
+            
+            try {
+                output.className = 'output loading';
+                output.textContent = '🚀 开始测试API调用...\\n';
+                
+                // 1. 提取视频ID
+                const videoId = extractVideoId(url);
+                output.textContent += `✅ 提取视频ID: ${videoId}\\n`;
+                
+                // 2. 构建API URL
+                const apiUrl = `${BASE_URL}?api_key=${API_KEY}&v=${videoId}`;
+                output.textContent += `📡 API URL: ${apiUrl}\\n`;
+                
+                // 3. 记录调用开始
+                const startTime = Date.now();
+                const callRecord = {
+                    id: `test_${videoId}_${startTime}`,
+                    videoId: videoId,
+                    url: apiUrl,
+                    startTime: startTime,
+                    status: 'pending'
+                };
+                
+                callHistory.unshift(callRecord);
+                output.textContent += `📝 记录调用开始: ${callRecord.id}\\n`;
+                
+                // 4. 发送API请求
+                output.textContent += '⏳ 发送API请求...\\n';
+                
+                const response = await fetch(apiUrl);
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                // 5. 更新调用记录
+                callRecord.endTime = endTime;
+                callRecord.duration = duration;
+                callRecord.httpStatus = response.status;
+                
+                output.textContent += `📊 HTTP状态: ${response.status} (耗时: ${duration}ms)\\n`;
+                
+                if (!response.ok) {
+                    callRecord.status = 'error';
+                    callRecord.error = `HTTP ${response.status}: ${response.statusText}`;
+                    
+                    output.className = 'output error';
+                    output.textContent += `❌ API错误: ${response.status} ${response.statusText}\\n`;
+                    return;
+                }
+                
+                // 6. 解析响应
+                const data = await response.json();
+                callRecord.responseSize = JSON.stringify(data).length;
+                
+                output.textContent += `📝 响应大小: ${callRecord.responseSize} bytes\\n`;
+                output.textContent += `📋 响应结构: hasError=${!!data.error}, hasTranscript=${!!data.transcript}\\n`;
+                
+                if (data.error) {
+                    callRecord.status = 'error';
+                    callRecord.error = data.error;
+                    
+                    output.className = 'output error';
+                    output.textContent += `❌ API返回错误: ${data.error}\\n`;
+                    return;
+                }
+                
+                if (!data.transcript || data.transcript.length === 0) {
+                    callRecord.status = 'no_transcript';
+                    callRecord.error = '视频无可用字幕';
+                    
+                    output.className = 'output error';
+                    output.textContent += `⚠️ 视频无可用字幕\\n`;
+                    return;
+                }
+                
+                // 7. 转换为SRT
+                const srtContent = convertToSRT(data.transcript);
+                
+                callRecord.status = 'success';
+                callRecord.success = true;
+                callRecord.transcriptLength = data.transcript.length;
+                
+                output.className = 'output success';
+                output.textContent += `✅ 成功获取字幕!\\n`;
+                output.textContent += `📋 字幕条数: ${data.transcript.length}\\n`;
+                output.textContent += `📄 SRT长度: ${srtContent.length}\\n`;
+                output.textContent += `\\n前3条字幕内容:\\n`;
+                
+                data.transcript.slice(0, 3).forEach((item, index) => {
+                    output.textContent += `  ${index + 1}. [${item.start}s] ${item.text}\\n`;
+                });
+                
+                output.textContent += `\\nSRT格式前200字符:\\n${srtContent.substring(0, 200)}...`;
+                
+            } catch (error) {
+                if (callHistory.length > 0 && callHistory[0].id.includes(videoId)) {
+                    callHistory[0].status = 'error';
+                    callHistory[0].error = error.message;
+                    callHistory[0].endTime = Date.now();
+                    callHistory[0].duration = callHistory[0].endTime - callHistory[0].startTime;
+                }
+                
+                output.className = 'output error';
+                output.textContent += `❌ 测试失败: ${error.message}\\n`;
+            } finally {
+                // 更新调试信息
+                updateDebugInfo();
+            }
+        }
+        
+        function updateDebugInfo() {
+            const debugInfo = document.getElementById('debugInfo');
+            
+            if (callHistory.length === 0) {
+                debugInfo.textContent = '无调用历史';
+                return;
+            }
+            
+            debugInfo.textContent = `总调用次数: ${callHistory.length}\\n\\n`;
+            
+            callHistory.slice(0, 5).forEach((call, index) => {
+                const timeAgo = Math.floor((Date.now() - call.startTime) / 1000);
+                debugInfo.textContent += `${index + 1}. ${call.id}\\n`;
+                debugInfo.textContent += `   状态: ${call.status}\\n`;
+                debugInfo.textContent += `   时间: ${timeAgo}秒前\\n`;
+                debugInfo.textContent += `   耗时: ${call.duration || 0}ms\\n`;
+                if (call.error) {
+                    debugInfo.textContent += `   错误: ${call.error}\\n`;
+                }
+                debugInfo.textContent += `\\n`;
+            });
+        }
+        
+        // 页面加载时显示配置信息
+        window.onload = function() {
+            const output = document.getElementById('output');
+            output.textContent = `🔧 配置信息:\\nAPI Key: ${API_KEY}\\nBase URL: ${BASE_URL}\\n\\n点击"测试API调用"开始测试...`;
+        };
+    </script>
+</body>
+</html>

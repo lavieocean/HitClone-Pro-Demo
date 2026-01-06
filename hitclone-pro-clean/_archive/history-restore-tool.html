@@ -1,0 +1,415 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HitClone Pro 历史数据恢复</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #DBFC53 0%, #10B981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+        }
+        .button {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 16px 32px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 8px;
+            min-width: 200px;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+        .button.secondary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .button.danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .status {
+            margin: 20px 0;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+        .status.info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+        .status.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+        }
+        .status.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+        }
+        .status.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+        .data-list {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .data-item {
+            padding: 8px;
+            margin: 4px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10B981, #DBFC53);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🔄 历史报告恢复工具</h1>
+            <p class="subtitle">自动扫描并恢复HitClone Pro的所有历史分析数据</p>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 30px;">
+            <button class="button" onclick="startAutoRestore()">
+                🎯 一键自动恢复所有数据
+            </button>
+            <button class="button secondary" onclick="scanData()">
+                🔍 扫描可用数据
+            </button>
+            <button class="button secondary" onclick="showManualRestore()">
+                🛠️ 手动选择恢复
+            </button>
+        </div>
+
+        <div id="status"></div>
+        <div id="progress" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+            <div id="progressText" style="text-align: center; font-size: 14px; color: rgba(255,255,255,0.8);"></div>
+        </div>
+        <div id="dataList"></div>
+        <div id="results"></div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="button danger" onclick="clearAllData()" style="font-size: 14px; min-width: 150px;">
+                🗑️ 清除所有数据
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let allStorageData = {};
+        
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+            statusDiv.style.display = 'block';
+        }
+
+        function showProgress(show = false, percent = 0, text = '') {
+            const progressDiv = document.getElementById('progress');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            progressDiv.style.display = show ? 'block' : 'none';
+            if (show) {
+                progressBar.style.width = percent + '%';
+                progressText.textContent = text;
+            }
+        }
+
+        function scanAllData() {
+            allStorageData = {};
+            const keys = Object.keys(localStorage);
+            
+            keys.forEach(key => {
+                try {
+                    const value = localStorage.getItem(key);
+                    if (value) {
+                        try {
+                            const parsed = JSON.parse(value);
+                            allStorageData[key] = {
+                                type: 'json',
+                                data: parsed,
+                                size: value.length,
+                                raw: value
+                            };
+                        } catch {
+                            allStorageData[key] = {
+                                type: 'string',
+                                data: value,
+                                size: value.length,
+                                raw: value
+                            };
+                        }
+                    }
+                } catch (error) {
+                    console.error(`读取localStorage key ${key} 失败:`, error);
+                }
+            });
+
+            return allStorageData;
+        }
+
+        function findHistoryReports() {
+            const reportKeys = [
+                'hitclone-analysis-history',
+                'hitclone-analysis-history-backup',
+                'hitclone-history-backup', 
+                'analysis-history-backup',
+                'video-analysis-history',
+                'hitclone-reports',
+                'youtube-analysis-history',
+                'ai-analysis-history'
+            ];
+
+            let totalFound = 0;
+            let allReports = [];
+            let foundSources = [];
+
+            reportKeys.forEach(key => {
+                const data = allStorageData[key];
+                if (data && data.type === 'json' && Array.isArray(data.data)) {
+                    console.log(`🔍 发现数据在 ${key}: ${data.data.length} 个项目`);
+                    totalFound += data.data.length;
+                    allReports = [...allReports, ...data.data];
+                    foundSources.push({
+                        key: key,
+                        count: data.data.length
+                    });
+                }
+            });
+
+            return { totalFound, allReports, foundSources };
+        }
+
+        function deduplicateReports(reports) {
+            const uniqueData = [];
+            const seenIds = new Set();
+            const seenTitles = new Set();
+            
+            reports.forEach(item => {
+                const id = item.id || `${item.title}-${item.analysisDate}`;
+                const titleTime = `${item.title}-${item.analysisDate}`;
+                
+                if (!seenIds.has(id) && !seenTitles.has(titleTime)) {
+                    seenIds.add(id);
+                    seenTitles.add(titleTime);
+                    uniqueData.push(item);
+                }
+            });
+
+            return uniqueData;
+        }
+
+        function saveToHistory(reports) {
+            try {
+                const existing = JSON.parse(localStorage.getItem('hitclone-analysis-history') || '[]');
+                const merged = [...reports, ...existing];
+                const final = deduplicateReports(merged);
+                
+                localStorage.setItem('hitclone-analysis-history', JSON.stringify(final));
+                
+                return {
+                    success: true,
+                    count: final.length,
+                    added: reports.length
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        async function startAutoRestore() {
+            showProgress(true, 0, '开始扫描数据...');
+            showStatus('🔍 正在扫描localStorage数据...', 'info');
+
+            // 模拟进度条
+            for (let i = 0; i <= 20; i++) {
+                showProgress(true, i * 5, `扫描进度: ${i * 5}%`);
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            scanAllData();
+            const { totalFound, allReports, foundSources } = findHistoryReports();
+
+            if (totalFound === 0) {
+                showProgress(false);
+                showStatus('❌ 未找到任何历史报告数据\n\n可能的原因:\n1. 数据从未保存过\n2. 使用了不同的浏览器或设备\n3. 清除了浏览器数据', 'error');
+                return;
+            }
+
+            showProgress(true, 50, `发现 ${totalFound} 个报告，正在去重...`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const uniqueReports = deduplicateReports(allReports);
+
+            showProgress(true, 75, `去重完成，正在保存 ${uniqueReports.length} 个报告...`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const saveResult = saveToHistory(uniqueReports);
+
+            showProgress(true, 100, '恢复完成！');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            showProgress(false);
+
+            if (saveResult.success) {
+                showStatus(`✅ 恢复完成！\n\n📊 数据统计:\n• 原始数据: ${totalFound} 个\n• 去重后: ${uniqueReports.length} 个\n• 最终保存: ${saveResult.count} 个\n\n📍 数据来源:\n${foundSources.map(s => `• ${s.key}: ${s.count} 个`).join('\n')}\n\n💡 请刷新HitClone Pro页面查看恢复的历史报告。`, 'success');
+                
+                // 显示恢复的报告预览
+                showRecoveredReports(uniqueReports.slice(0, 10));
+            } else {
+                showStatus(`❌ 保存失败: ${saveResult.error}`, 'error');
+            }
+        }
+
+        function showRecoveredReports(reports) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h3 style="color: #DBFC53; margin: 20px 0 10px 0;">📄 恢复的报告预览 (前10个)</h3>
+                <div class="data-list">
+                    ${reports.map((report, index) => `
+                        <div class="data-item">
+                            <div>
+                                <div style="font-weight: bold; color: #DBFC53;">${report.title || '未知标题'}</div>
+                                <div style="font-size: 11px; color: rgba(255,255,255,0.6);">
+                                    频道: ${report.channel || '未知'} | 评分: ${report.score || 0} | 日期: ${new Date(report.analysisDate).toLocaleDateString()}
+                                </div>
+                            </div>
+                            <div style="color: #10B981;">#${index + 1}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function scanData() {
+            showStatus('🔍 正在扫描数据...', 'info');
+            scanAllData();
+            
+            const dataListDiv = document.getElementById('dataList');
+            const keys = Object.keys(allStorageData);
+            
+            dataListDiv.innerHTML = `
+                <h3 style="color: #DBFC53; margin: 20px 0 10px 0;">📊 localStorage 数据扫描结果</h3>
+                <div class="status info">找到 ${keys.length} 个localStorage键</div>
+                <div class="data-list">
+                    ${keys.map(key => {
+                        const data = allStorageData[key];
+                        const isHistoryData = key.toLowerCase().includes('analysis') || 
+                                            key.toLowerCase().includes('history') ||
+                                            key.toLowerCase().includes('report') ||
+                                            key.toLowerCase().includes('hitclone');
+                        return `
+                            <div class="data-item" style="background: ${isHistoryData ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.05)'};">
+                                <div>
+                                    <div style="color: ${isHistoryData ? '#DBFC53' : 'white'}; font-weight: bold;">${key}</div>
+                                    <div style="color: rgba(255,255,255,0.6);">
+                                        类型: ${data.type} | 大小: ${data.size} 字符
+                                        ${data.type === 'json' && Array.isArray(data.data) ? ` | 数组长度: ${data.data.length}` : ''}
+                                    </div>
+                                </div>
+                                ${isHistoryData ? '<div style="color: #10B981;">📊 历史数据</div>' : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            
+            showStatus(`📊 扫描完成: 找到 ${keys.length} 个localStorage键`, 'success');
+        }
+
+        function showManualRestore() {
+            scanData();
+            showStatus('💡 请在上方数据列表中查看可用数据，然后点击"一键自动恢复所有数据"进行批量恢复', 'info');
+        }
+
+        function clearAllData() {
+            if (confirm('⚠️ 确定要清除所有localStorage数据吗？\n\n这将删除所有HitClone Pro的本地数据，包括设置和历史记录。此操作不可恢复！')) {
+                if (confirm('🚨 最后确认：真的要清除所有数据吗？')) {
+                    try {
+                        localStorage.clear();
+                        showStatus('✅ 所有localStorage数据已清除', 'success');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    } catch (error) {
+                        showStatus(`❌ 清除数据失败: ${error.message}`, 'error');
+                    }
+                }
+            }
+        }
+
+        // 页面加载时自动扫描
+        window.addEventListener('load', () => {
+            showStatus('🎯 工具已就绪，点击"一键自动恢复所有数据"开始恢复历史报告', 'info');
+            scanData();
+        });
+    </script>
+</body>
+</html>
+  

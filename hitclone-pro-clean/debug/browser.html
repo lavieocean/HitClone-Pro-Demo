@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>浏览器调试 - HitClone Pro</title>
+    <style>
+        body { font-family: monospace; max-width: 900px; margin: 20px auto; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 HitClone Pro 浏览器调试工具</h1>
+    
+    <div class="info test-result">
+        <strong>当前页面URL:</strong> <span id="current-url"></span><br>
+        <strong>用户代理:</strong> <span id="user-agent"></span><br>
+        <strong>时间:</strong> <span id="current-time"></span>
+    </div>
+    
+    <button onclick="runAllTests()">🚀 运行所有测试</button>
+    <button onclick="clearResults()">🗑️ 清除结果</button>
+    <button onclick="downloadLog()">💾 下载日志</button>
+    <button onclick="unregisterServiceWorker()">🧹 清除Service Worker</button>
+    <button onclick="testIPv6()">🌐 测试IPv6</button>
+    <button onclick="checkHSTS()">🔒 检查HSTS</button>
+    <button onclick="checkChromeProfile()">👤 检查Chrome配置</button>
+    <button onclick="performDeepCleanup()">🔧 深度清理</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        const results = [];
+        
+        // 显示基本信息
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('user-agent').textContent = navigator.userAgent;
+        document.getElementById('current-time').textContent = new Date().toLocaleString();
+        
+        function addResult(title, status, message, details = null) {
+            const result = { title, status, message, details, timestamp: new Date() };
+            results.push(result);
+            
+            const div = document.createElement('div');
+            div.className = `test-result ${status}`;
+            
+            let html = `<h3>${title}</h3><p>${message}</p>`;
+            if (details) {
+                html += `<pre>${details}</pre>`;
+            }
+            
+            div.innerHTML = html;
+            document.getElementById('results').appendChild(div);
+            
+            console.log(`[${status.toUpperCase()}] ${title}: ${message}`);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            results.length = 0;
+        }
+        
+        async function testBasicFetch() {
+            addResult('🌐 基础连接测试', 'info', '开始测试基础HTTP连接...');
+            
+            const testUrls = [
+                'http://localhost:8081/',
+                'http://127.0.0.1:8081/',
+                'http://localhost:8080/',
+                'http://127.0.0.1:8080/'
+            ];
+            
+            for (const url of testUrls) {
+                try {
+                    const startTime = Date.now();
+                    const response = await fetch(url, { 
+                        method: 'HEAD',
+                        cache: 'no-cache',
+                        mode: 'cors'
+                    });
+                    const endTime = Date.now();
+                    
+                    const details = `状态码: ${response.status}
+响应时间: ${endTime - startTime}ms
+Content-Type: ${response.headers.get('content-type') || 'N/A'}
+Server: ${response.headers.get('server') || 'N/A'}`;
+                    
+                    if (response.ok) {
+                        addResult(`✅ ${url}`, 'success', '连接成功', details);
+                    } else {
+                        addResult(`❌ ${url}`, 'error', `HTTP错误: ${response.status}`, details);
+                    }
+                    
+                } catch (error) {
+                    addResult(`💥 ${url}`, 'error', `连接失败: ${error.message}`, error.stack);
+                }
+            }
+        }
+        
+        async function testContentFetch() {
+            addResult('📄 内容获取测试', 'info', '测试实际页面内容获取...');
+            
+            try {
+                const response = await fetch('http://localhost:8081/', {
+                    cache: 'no-cache',
+                    credentials: 'same-origin'
+                });
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    const hasReact = text.includes('<div id="root">');
+                    const hasTitle = text.includes('HitClone Pro');
+                    
+                    const details = `内容长度: ${text.length}
+包含React根节点: ${hasReact}
+包含应用标题: ${hasTitle}
+
+HTML内容预览:
+${text.substring(0, 300)}...`;
+                    
+                    addResult('📋 主页内容', 'success', '成功获取页面内容', details);
+                } else {
+                    addResult('❌ 主页内容', 'error', `HTTP错误: ${response.status}`);
+                }
+                
+            } catch (error) {
+                addResult('💥 主页内容', 'error', `获取失败: ${error.message}`, error.stack);
+            }
+        }
+        
+        async function testCorsAndSecurity() {
+            addResult('🔒 安全和CORS测试', 'info', '检查跨域和安全策略...');
+            
+            // 测试CORS预检
+            try {
+                const response = await fetch('http://localhost:8081/health', {
+                    method: 'OPTIONS'
+                });
+                
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('access-control-allow-origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('access-control-allow-methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('access-control-allow-headers')
+                };
+                
+                addResult('🔗 CORS预检', 'info', 'CORS预检完成', JSON.stringify(corsHeaders, null, 2));
+                
+            } catch (error) {
+                addResult('❌ CORS预检', 'warning', `CORS测试失败: ${error.message}`);
+            }
+            
+            // 检查CSP
+            try {
+                const csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+                if (csp) {
+                    addResult('🛡️ CSP检查', 'warning', '发现CSP策略，可能影响资源加载', csp.content);
+                } else {
+                    addResult('✅ CSP检查', 'success', '未发现阻止性CSP策略');
+                }
+            } catch (error) {
+                addResult('❌ CSP检查', 'error', `CSP检查失败: ${error.message}`);
+            }
+        }
+        
+        async function testBrowserFeatures() {
+            addResult('🔧 浏览器特性测试', 'info', '检查浏览器支持和配置...');
+            
+            const features = {
+                'Fetch API': typeof fetch !== 'undefined',
+                'Local Storage': typeof localStorage !== 'undefined',
+                'Session Storage': typeof sessionStorage !== 'undefined',
+                'Web Workers': typeof Worker !== 'undefined',
+                'Service Workers': 'serviceWorker' in navigator,
+                'ES6 Modules': 'noModule' in document.createElement('script'),
+                'WebSocket': typeof WebSocket !== 'undefined'
+            };
+            
+            const featuresList = Object.entries(features)
+                .map(([name, supported]) => `${supported ? '✅' : '❌'} ${name}`)
+                .join('\n');
+            
+            addResult('📋 浏览器特性', 'info', '浏览器特性检查完成', featuresList);
+            
+            // 检查扩展和广告拦截器
+            const startTime = Date.now();
+            try {
+                await fetch('http://localhost:8081/ads.js', { cache: 'no-cache' });
+            } catch (error) {
+                if (error.message.includes('blocked')) {
+                    addResult('🚫 广告拦截器', 'warning', '检测到可能的广告拦截器干扰');
+                }
+            }
+        }
+        
+        async function testNetworkConditions() {
+            addResult('🌐 网络条件测试', 'info', '检查网络状态和连接...');
+            
+            // 检查在线状态
+            const onlineStatus = navigator.onLine ? '在线' : '离线';
+            
+            // 测试连接速度
+            const speedTestStart = Date.now();
+            try {
+                await fetch('http://localhost:8081/health', { cache: 'no-cache' });
+                const speedTestEnd = Date.now();
+                const latency = speedTestEnd - speedTestStart;
+                
+                let speedCategory = '正常';
+                if (latency > 1000) speedCategory = '较慢';
+                if (latency > 5000) speedCategory = '很慢';
+                if (latency < 100) speedCategory = '很快';
+                
+                const details = `网络状态: ${onlineStatus}
+连接延迟: ${latency}ms
+速度评估: ${speedCategory}
+连接类型: ${navigator.connection?.effectiveType || '未知'}`;
+                
+                addResult('📊 网络状态', 'success', '网络检查完成', details);
+                
+            } catch (error) {
+                addResult('❌ 网络状态', 'error', `网络测试失败: ${error.message}`);
+            }
+        }
+        
+        async function runAllTests() {
+            clearResults();
+            addResult('🚀 开始诊断', 'info', `开始完整的浏览器诊断测试 - ${new Date().toLocaleString()}`);
+            
+            await testChromeProfileInfo();
+            await testExtensionConflicts();
+            await testServiceWorkerStatus();
+            await testIPv4vsIPv6();
+            await testHSTSStatus();
+            await testBasicFetch();
+            await testContentFetch();
+            await testCorsAndSecurity();
+            await testBrowserFeatures();
+            await testNetworkConditions();
+            await testStaticResourceMime();
+            
+            // 生成总结
+            const successCount = results.filter(r => r.status === 'success').length;
+            const errorCount = results.filter(r => r.status === 'error').length;
+            const totalTests = results.filter(r => r.status !== 'info').length;
+            
+            const summary = `诊断完成！
+成功测试: ${successCount}
+失败测试: ${errorCount}
+总测试数: ${totalTests}
+成功率: ${Math.round((successCount / totalTests) * 100)}%`;
+            
+            addResult('📊 诊断总结', successCount > errorCount ? 'success' : 'error', summary);
+            
+            if (errorCount > 0) {
+                addResult('💡 建议', 'warning', '检测到问题，请检查失败的测试项目，可能需要重启浏览器或清除所有浏览器数据');
+            }
+        }
+        
+        function downloadLog() {
+            const logData = {
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                url: window.location.href,
+                results: results
+            };
+            
+            const blob = new Blob([JSON.stringify(logData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `hitclone-debug-${new Date().getTime()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // o3 Pro建议的增强检测功能
+        async function testServiceWorkerStatus() {
+            addResult('🔧 Service Worker检测', 'info', '检查Service Worker状态...');
+            
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    if (registrations.length > 0) {
+                        const details = registrations.map((reg, index) => 
+                            `SW ${index + 1}: ${reg.scope}\n状态: ${reg.active ? '活跃' : '非活跃'}\n更新时间: ${reg.installing ? '更新中' : '稳定'}`
+                        ).join('\n\n');
+                        
+                        addResult('⚠️ Service Worker发现', 'warning', `发现${registrations.length}个Service Worker，可能影响访问`, details);
+                    } else {
+                        addResult('✅ Service Worker清洁', 'success', '未发现Service Worker干扰');
+                    }
+                } catch (error) {
+                    addResult('❌ Service Worker检测失败', 'error', error.message);
+                }
+            } else {
+                addResult('ℹ️ Service Worker不支持', 'info', '浏览器不支持Service Worker');
+            }
+        }
+        
+        async function unregisterServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const registration of registrations) {
+                        await registration.unregister();
+                    }
+                    addResult('🧹 Service Worker清除', 'success', `已清除${registrations.length}个Service Worker，请刷新页面重试`);
+                } catch (error) {
+                    addResult('❌ Service Worker清除失败', 'error', error.message);
+                }
+            }
+        }
+        
+        async function testIPv4vsIPv6() {
+            addResult('🌐 IPv4/IPv6检测', 'info', '检测localhost解析...');
+            
+            const testUrls = [
+                { name: 'IPv4 localhost', url: 'http://127.0.0.1:8081/' },
+                { name: 'IPv6 localhost', url: 'http://[::1]:8081/' },
+                { name: 'hostname localhost', url: 'http://localhost:8081/' }
+            ];
+            
+            for (const test of testUrls) {
+                try {
+                    const startTime = Date.now();
+                    const response = await fetch(test.url, { 
+                        method: 'HEAD', 
+                        cache: 'no-cache',
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    const endTime = Date.now();
+                    
+                    if (response.ok) {
+                        addResult(`✅ ${test.name}`, 'success', `连接成功 (${endTime - startTime}ms)`);
+                    } else {
+                        addResult(`❌ ${test.name}`, 'error', `HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    if (error.name === 'TimeoutError') {
+                        addResult(`⏱️ ${test.name}`, 'warning', '连接超时');
+                    } else {
+                        addResult(`💥 ${test.name}`, 'error', error.message);
+                    }
+                }
+            }
+        }
+        
+        async function testIPv6() {
+            await testIPv4vsIPv6();
+        }
+        
+        async function testHSTSStatus() {
+            addResult('🔒 HSTS检测', 'info', '检查HTTPS强制升级...');
+            
+            // 检查当前页面是否被HSTS影响
+            const currentUrl = window.location.href;
+            if (currentUrl.startsWith('https://localhost')) {
+                addResult('⚠️ HSTS污染检测', 'warning', '当前页面已被强制升级到HTTPS，可能存在HSTS污染');
+            }
+            
+            // 尝试访问HTTP版本，看是否被重定向
+            try {
+                const response = await fetch('http://localhost:8081/', { 
+                    method: 'HEAD',
+                    cache: 'no-cache',
+                    redirect: 'manual'
+                });
+                
+                if (response.type === 'opaqueredirect') {
+                    addResult('⚠️ HSTS重定向', 'warning', 'HTTP请求被重定向到HTTPS，存在HSTS污染');
+                } else if (response.ok) {
+                    addResult('✅ HSTS正常', 'success', 'HTTP访问正常，无HSTS污染');
+                }
+            } catch (error) {
+                addResult('❌ HSTS检测失败', 'error', error.message);
+            }
+        }
+        
+        async function checkHSTS() {
+            await testHSTSStatus();
+        }
+        
+        async function testStaticResourceMime() {
+            addResult('📄 静态资源MIME检测', 'info', '检查关键资源的Content-Type...');
+            
+            const resources = [
+                { name: 'Vite SVG', path: '/vite.svg', expected: 'image/svg+xml' },
+                { name: 'Main CSS', path: '/src/index.css', expected: 'text/css' },
+                { name: 'Main JS', path: '/src/main.jsx', expected: 'application/javascript' },
+                { name: 'App JSX', path: '/src/App.jsx', expected: 'application/javascript' }
+            ];
+            
+            for (const resource of resources) {
+                try {
+                    const response = await fetch(`http://localhost:8081${resource.path}`, {
+                        method: 'HEAD',
+                        cache: 'no-cache'
+                    });
+                    
+                    const contentType = response.headers.get('content-type') || 'unknown';
+                    const hasUtf8 = contentType.includes('charset=utf-8');
+                    const hasExpectedType = contentType.includes(resource.expected);
+                    
+                    const details = `Content-Type: ${contentType}\nUTF-8编码: ${hasUtf8 ? '✅' : '❌'}\n期望类型: ${resource.expected}`;
+                    
+                    if (response.ok && hasExpectedType && hasUtf8) {
+                        addResult(`✅ ${resource.name}`, 'success', 'MIME类型正确', details);
+                    } else if (response.ok && hasExpectedType) {
+                        addResult(`⚠️ ${resource.name}`, 'warning', 'MIME类型正确但缺少UTF-8', details);
+                    } else {
+                        addResult(`❌ ${resource.name}`, 'error', 'MIME类型错误', details);
+                    }
+                } catch (error) {
+                    addResult(`💥 ${resource.name}`, 'error', `无法获取: ${error.message}`);
+                }
+            }
+        }
+        
+        // Chrome账号和配置检测
+        async function testChromeProfileInfo() {
+            addResult('👤 Chrome配置检测', 'info', '检查Chrome浏览器配置信息...');
+            
+            const isChrome = navigator.userAgent.includes('Chrome') && !navigator.userAgent.includes('Edg');
+            if (!isChrome) {
+                addResult('ℹ️ 浏览器类型', 'info', '非Chrome浏览器，跳过Chrome专用检测');
+                return;
+            }
+            
+            // 检测是否为无痕模式
+            const isIncognito = await new Promise((resolve) => {
+                if ('webkitRequestFileSystem' in window) {
+                    webkitRequestFileSystem(window.TEMPORARY, 1, () => resolve(false), () => resolve(true));
+                } else {
+                    resolve(false);
+                }
+            });
+            
+            if (isIncognito) {
+                addResult('🕵️ 无痕模式', 'success', '当前处于无痕模式，可避免账号相关问题');
+            } else {
+                addResult('👤 普通模式', 'warning', '建议尝试无痕模式排除账号相关问题', '按Ctrl+Shift+N打开无痕模式');
+            }
+            
+            // 检查浏览器存储权限
+            try {
+                const estimate = await navigator.storage.estimate();
+                const usedMB = Math.round(estimate.usage / 1024 / 1024);
+                const quotaMB = Math.round(estimate.quota / 1024 / 1024);
+                
+                addResult('💾 存储使用情况', 'info', `已用: ${usedMB}MB / 配额: ${quotaMB}MB`);
+                
+                if (usedMB > 500) {
+                    addResult('⚠️ 存储警告', 'warning', '浏览器存储使用较多，建议清理缓存');
+                }
+            } catch (error) {
+                addResult('❌ 存储检测失败', 'error', error.message);
+            }
+        }
+        
+        async function testExtensionConflicts() {
+            addResult('🧩 扩展冲突检测', 'info', '检查可能导致localhost访问问题的扩展...');
+            
+            // 检测是否有广告拦截器
+            const adBlockTest = document.createElement('div');
+            adBlockTest.innerHTML = '&nbsp;';
+            adBlockTest.className = 'adsbox';
+            adBlockTest.style.position = 'absolute';
+            adBlockTest.style.left = '-1000px';
+            document.body.appendChild(adBlockTest);
+            
+            setTimeout(() => {
+                const isBlocked = adBlockTest.offsetHeight === 0;
+                document.body.removeChild(adBlockTest);
+                
+                if (isBlocked) {
+                    addResult('🚫 广告拦截器', 'warning', '检测到广告拦截器，可能影响localhost访问', '建议将localhost添加到白名单');
+                } else {
+                    addResult('✅ 广告拦截器', 'success', '未检测到会影响localhost的广告拦截');
+                }
+            }, 100);
+            
+            // 检测常见的扩展API
+            const extensionAPIs = [
+                { name: 'Chrome扩展API', prop: 'chrome.runtime', desc: '存在Chrome扩展环境' },
+                { name: 'WebRequest API', prop: 'chrome.webRequest', desc: '可能有网络请求拦截扩展' },
+                { name: 'Proxy API', prop: 'chrome.proxy', desc: '可能有代理扩展' }
+            ];
+            
+            extensionAPIs.forEach(api => {
+                try {
+                    if (eval(`typeof ${api.prop} !== 'undefined'`)) {
+                        addResult('🔍 扩展检测', 'info', `检测到${api.name}`, api.desc);
+                    }
+                } catch (error) {
+                    // 忽略访问错误
+                }
+            });
+        }
+        
+        async function checkChromeProfile() {
+            clearResults();
+            addResult('👤 Chrome配置专项检查', 'info', '执行Chrome浏览器配置检查...');
+            
+            await testChromeProfileInfo();
+            await testExtensionConflicts();
+            
+            // 检查localStorage污染
+            try {
+                const localhostKeys = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.includes('localhost') || key.includes('8081'))) {
+                        localhostKeys.push(key);
+                    }
+                }
+                
+                if (localhostKeys.length > 0) {
+                    addResult('🗄️ localStorage污染', 'warning', `发现${localhostKeys.length}个localhost相关存储项`, localhostKeys.join(', '));
+                } else {
+                    addResult('✅ localStorage清洁', 'success', '未发现localhost相关存储污染');
+                }
+            } catch (error) {
+                addResult('❌ localStorage检查失败', 'error', error.message);
+            }
+            
+            // 检查sessionStorage
+            try {
+                const sessionKeys = [];
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    if (key && (key.includes('localhost') || key.includes('8081'))) {
+                        sessionKeys.push(key);
+                    }
+                }
+                
+                if (sessionKeys.length > 0) {
+                    addResult('📝 sessionStorage污染', 'warning', `发现${sessionKeys.length}个会话存储项`, sessionKeys.join(', '));
+                } else {
+                    addResult('✅ sessionStorage清洁', 'success', '未发现会话存储污染');
+                }
+            } catch (error) {
+                addResult('❌ sessionStorage检查失败', 'error', error.message);
+            }
+        }
+        
+        async function performDeepCleanup() {
+            addResult('🔧 深度清理', 'info', '开始执行深度清理操作...');
+            
+            let cleanupCount = 0;
+            
+            // 清理localStorage
+            try {
+                const localhostKeys = [];
+                for (let i = localStorage.length - 1; i >= 0; i--) {
+                    const key = localStorage.key(i);
+                    if (key && (key.includes('localhost') || key.includes('8081') || key.includes('hitclone'))) {
+                        localhostKeys.push(key);
+                        localStorage.removeItem(key);
+                        cleanupCount++;
+                    }
+                }
+                
+                if (localhostKeys.length > 0) {
+                    addResult('🗄️ localStorage清理', 'success', `已清理${localhostKeys.length}个存储项`, localhostKeys.join(', '));
+                }
+            } catch (error) {
+                addResult('❌ localStorage清理失败', 'error', error.message);
+            }
+            
+            // 清理sessionStorage
+            try {
+                const sessionKeys = [];
+                for (let i = sessionStorage.length - 1; i >= 0; i--) {
+                    const key = sessionStorage.key(i);
+                    if (key && (key.includes('localhost') || key.includes('8081') || key.includes('hitclone'))) {
+                        sessionKeys.push(key);
+                        sessionStorage.removeItem(key);
+                        cleanupCount++;
+                    }
+                }
+                
+                if (sessionKeys.length > 0) {
+                    addResult('📝 sessionStorage清理', 'success', `已清理${sessionKeys.length}个会话项`, sessionKeys.join(', '));
+                }
+            } catch (error) {
+                addResult('❌ sessionStorage清理失败', 'error', error.message);
+            }
+            
+            // 清理Service Worker
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const registration of registrations) {
+                        if (registration.scope.includes('localhost') || registration.scope.includes('8081')) {
+                            await registration.unregister();
+                            cleanupCount++;
+                        }
+                    }
+                    
+                    if (registrations.length > 0) {
+                        addResult('🧹 Service Worker清理', 'success', `已清理${registrations.length}个Service Worker`);
+                    }
+                } catch (error) {
+                    addResult('❌ Service Worker清理失败', 'error', error.message);
+                }
+            }
+            
+            // 尝试清理缓存
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    for (const cacheName of cacheNames) {
+                        if (cacheName.includes('localhost') || cacheName.includes('8081') || cacheName.includes('hitclone')) {
+                            await caches.delete(cacheName);
+                            cleanupCount++;
+                        }
+                    }
+                    
+                    if (cacheNames.length > 0) {
+                        addResult('💾 Cache清理', 'success', `检查了${cacheNames.length}个缓存`);
+                    }
+                } catch (error) {
+                    addResult('❌ Cache清理失败', 'error', error.message);
+                }
+            }
+            
+            addResult('🎉 清理完成', 'success', `总共执行了${cleanupCount}项清理操作`, '建议刷新页面（Ctrl+Shift+R）并重新测试');
+            
+            // 显示手动清理指南
+            const manualSteps = `
+手动清理步骤（推荐）：
+1. 按F12打开开发者工具
+2. 转到Application面板
+3. 在Storage部分清除：
+   - Local Storage中的localhost项
+   - Session Storage中的localhost项
+   - Service Workers中的相关项
+4. 转到Network面板，勾选"Disable cache"
+5. 访问chrome://settings/content/all搜索localhost
+6. 删除所有localhost相关的站点数据
+7. 访问chrome://net-internals/#hsts
+8. 在Delete domain security policies中输入localhost并删除
+9. 重启浏览器后重试
+            `;
+            
+            addResult('📋 手动清理指南', 'info', '如自动清理无效，请按以下步骤手动清理', manualSteps);
+        }
+        
+        // 页面加载完成后自动运行测试
+        window.onload = function() {
+            console.log('🔍 HitClone Pro 增强版浏览器调试工具已加载');
+            console.log('💡 发现Chrome账号问题？尝试无痕模式或深度清理功能');
+            setTimeout(runAllTests, 1000);
+        };
+    </script>
+</body>
+</html>

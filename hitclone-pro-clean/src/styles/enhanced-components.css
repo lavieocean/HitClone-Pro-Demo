@@ -1,0 +1,176 @@
+/* 增强组件专用样式 - 确保UI改进可见 */
+
+/* Full Report Enhanced 增强样式 - 高优先级 */
+.full-report-enhanced {
+  /* 确保渐变背景可见 */
+  background: #0A0A0A !important;
+  color: #ffffff !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif !important;
+  line-height: 1.6 !important;
+  min-height: 100vh !important;
+}
+
+/* 报告标题渐变效果 */
+.full-report-enhanced h1[style*="background"] {
+  background: linear-gradient(135deg, #DBFC53 0%, #A8E063 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* 确保病毒传播潜力分数可见 */
+.full-report-enhanced div[style*="background: linear-gradient(135deg, #DBFC53, #A8E063)"] {
+  background: linear-gradient(135deg, #DBFC53, #A8E063) !important;
+  color: #000 !important;
+  border-radius: 24px !important;
+  padding: 8px 20px !important;
+  font-weight: 700 !important;
+}
+
+/* KPI 网格在大屏幕上显示多列 */
+@media (min-width: 769px) {
+  .full-report-enhanced .kpi-grid,
+  .kpi-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 24px !important;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 768px) {
+  .full-report-enhanced .kpi-grid,
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+}
+
+/* 数据网格响应式优化 */
+@media (min-width: 769px) {
+  .full-report-enhanced .data-grid,
+  .data-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 24px !important;
+  }
+}
+
+/* 确保SafeSection组件可见 */
+.safe-section-error {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* 增强卡片样式可见性 */
+.full-report-enhanced div[style*="background: rgba(255,255,255,0.03)"] {
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 16px !important;
+  padding: 32px !important;
+}
+
+/* 确保颜色方案正确 */
+.full-report-enhanced .content-card h3,
+.full-report-enhanced h3[style*="color: #DBFC53"] {
+  color: #DBFC53 !important;
+}
+
+.full-report-enhanced span[style*="color: #DBFC53"] {
+  color: #DBFC53 !important;
+}
+
+/* 顶部导航栏确保可见 */
+.full-report-enhanced > div:first-child {
+  background: #000 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+}
+
+/* 版本指示器样式 */
+.component-version-indicator {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(219, 252, 83, 0.1);
+  border: 1px solid rgba(219, 252, 83, 0.3);
+  color: #DBFC53;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* 错误边界组件样式 */
+.section-error-boundary {
+  display: block !important;
+  visibility: visible !important;
+}
+
+.section-error-fallback {
+  background: #FEF2F2 !important;
+  border: 1px solid #FECACA !important;
+  border-radius: 8px !important;
+  padding: 20px !important;
+  text-align: center !important;
+  margin: 10px 0 !important;
+}
+
+/* Master Prompt v2.2 数据结构样式 */
+.essence-summary-section,
+.video-summary-section,
+.segment-analysis-section,
+.action-board-section {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* 精华总结渐变背景 */
+.essence-summary-section .essence-card {
+  background: #1A1A1A !important;
+  border: 1px solid #333 !important;
+  border-radius: 12px !important;
+  padding: 24px !important;
+  transition: all 0.3s ease !important;
+}
+
+.essence-summary-section .essence-card:hover {
+  border-color: #DBFC53 !important;
+  transform: translateY(-2px) !important;
+}
+
+/* 智能爬虫数据优势显示 */
+.scraping-advantage-section {
+  background: linear-gradient(135deg, #EBF8FF 0%, #DBEAFE 100%) !important;
+  border: 2px solid #3B82F6 !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+}
+
+/* 确保所有文本颜色正确 */
+.full-report-enhanced * {
+  color: inherit;
+}
+
+.full-report-enhanced *[style*="color: #"] {
+  /* 保留内联颜色样式 */
+}
+
+/* 调试信息样式 */
+.debug-info {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #00ff00;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  z-index: 1001;
+  max-width: 300px;
+  word-break: break-all;
+}
